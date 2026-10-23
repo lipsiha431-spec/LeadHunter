@@ -205,6 +205,16 @@ def format_rz_lead(lead: dict[str, Any]) -> dict[str, Any]:
     if notes:
         history.append({"label": "заметка", "text": notes})
 
+    phones = []
+    if phone:
+        phones.append({
+            "raw": phone,
+            "pretty": phone,
+            "d": digits,
+            "mob": True,
+            "src": "Google"
+        })
+
     return {
         "id": lid,
         "h": "",
@@ -237,6 +247,23 @@ def format_rz_lead(lead: dict[str, Any]) -> dict[str, Any]:
         "draftText": draft_text,
         "text": draft_text,
         "ownerText": draft_text,
+        "draftWarn": [],
+        "draftOld": "",
+        "placeholder": "Напишите сообщение или нажмите «Написать ИИ»...",
+        "twinN": 0,
+        "claim": None,
+        "badge": None,
+        "legal": None,
+        "stops": [
+            {"id": "refusal", "label": "Отказ"},
+            {"id": "competitor", "label": "Уже есть подрядчик"},
+            {"id": "expensive", "label": "Слишком дорого"},
+            {"id": "no_need", "label": "Сайт не нужен"}
+        ],
+        "canMr": True,
+        "marked": stage in ("replied", "interested", "client"),
+        "incoming": None,
+        "touch": lead.get("updated_at", "сегодня"),
         "firstDraft": True,
         "genDone": False,
         "risk": "",

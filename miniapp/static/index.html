@@ -308,6 +308,12 @@ button.kpi span::after{content:" ›";color:var(--ink3)}
 .fchip[aria-pressed="true"]{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:var(--ink);font-weight:600}
 .fchip select{appearance:none;-webkit-appearance:none;border:0;background:none;color:inherit;font:inherit;padding:0;outline:none;max-width:160px}
 .fchip select option{background:#141414;color:var(--ink)}
+.fchip-select{cursor:pointer;user-select:none}
+.fchip-select .chip-text{font-weight:500;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fchip-select .chip-arr{font-size:11px;opacity:.55;margin-left:2px;display:inline-block;transition:transform .2s var(--ease-out)}
+.fchip-select:hover .chip-arr,.fchip-select:active .chip-arr{opacity:.95;transform:translateY(1px)}
+.opt[aria-current="true"]{background:rgba(0,240,255,.12)!important;color:#00F0FF!important;border:1px solid rgba(0,240,255,.35)!important;font-weight:600}
+.opt[aria-current="true"]::after{content:"✓";float:right;font-weight:700;color:#00F0FF}
 
 /* ---- лента «Сообщения» (mcard) ---- */
 .mtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 var(--sp-el);font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
@@ -985,12 +991,15 @@ async function viewNew(more, quiet){
   setTitle('Парсер', d.count === d.total ? `${nf.format(d.total)} новых · не в Базе` : `${nf.format(d.count)} из ${nf.format(d.total)} под фильтр`);
   if (more) { S.parser.items = S.parser.items.concat(list); return null; }
   S.parserNext = list;   // в S.parser.items — только если show() и правда перерисует (пока печатают, он пропускает)
-  const f = d.filter;
+  const f = d.filter || {};
+  S.cities = d.cities || [];
+  const curSort = d.sort || P.sort || 'score';
+  const curSortObj = SORTS.find(s => s[0] === curSort) || SORTS[0];
   let h = `<div class="filters" role="group" aria-label="Фильтры">
-    <label class="fchip" aria-pressed="${!!f.city}">${icon('pin', 'sm')}<select id="fCity" aria-label="Город"><option value="">Все города</option>${d.cities.map(c => `<option${c === f.city ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+    <button type="button" class="fchip fchip-select" data-pick-city aria-pressed="${!!f.city}">${icon('pin', 'sm')}<span class="chip-text">${esc(f.city || 'Все города')}</span><span class="chip-arr">▾</span></button>
     ${KINDS.map(([k, lab]) => `<button type="button" class="fchip" data-kind="${k}" aria-pressed="${(f.kind || '') === k}">${k ? `<span class="dot ${k}"></span>` : ''}${lab}</button>`).join('')}
     <button type="button" class="fchip" data-mob aria-pressed="${!!f.mob}">${icon('phone', 'sm')}Мобильный</button>
-    <label class="fchip" aria-pressed="false">${icon('filter', 'sm')}<select id="fSort" aria-label="Сортировка">${SORTS.map(([k, lab]) => `<option value="${k}"${k === d.sort ? ' selected' : ''}>${lab}</option>`).join('')}</select></label></div>`;
+    <button type="button" class="fchip fchip-select" data-pick-sort aria-pressed="${curSort !== 'score'}">${icon('filter', 'sm')}<span class="chip-text">${esc(curSortObj[1])}</span><span class="chip-arr">▾</span></button></div>`;
   h += `<p class="stats">Показано <b class="num" id="pShown">${nf.format(list.length)}</b> из ${nf.format(d.count)} · <span style="color:#FFB39E">${nf.format(d.hot)} без сайта</span> · <span style="color:#F5DA8A">${nf.format(d.warm)} с шаблоном</span></p>`;
   h += `<div class="btns" style="margin:0 0 var(--sp-el)"><button type="button" class="btn" data-run>${icon('search')}Найти новые: город и категория</button></div>`;
   h += d.items.length ? `<div class="list" id="pList">${d.items.map(pcard).join('')}</div>${d.more ? `<div class="more"><button type="button" class="btn wide" data-more data-left="${d.count - list.length}">${icon('plus')}Показать ещё ${Math.min(30, d.count - list.length)} из ${nf.format(d.count - list.length)}</button></div>` : ''}` : `<div class="empty"><b>Никого под фильтр</b>${d.total ? `Из ${nf.format(d.total)} новых ни один не подошёл.<br><button type="button" class="btn" data-reset>${icon('x')}Сбросить фильтры</button>` : 'Новых нет — нажмите «Найти новые» выше или запустите поиск в программе.'}</div>`;
@@ -1087,8 +1096,6 @@ async function show(quiet, force, lim){
   }
 }
 function bindView(){
-  const c = $('fCity'); if (c) c.onchange = e => { keep('nf', Object.assign({}, P.nf, { city: e.target.value })); haptic('sel'); show(); };
-  const s = $('fSort'); if (s) s.onchange = e => { keep('sort', e.target.value); haptic('sel'); show(); };
   const t = $('tiles'); if (t) { const on = t.querySelector('.on'); if (on) { const dx = on.getBoundingClientRect().left - t.getBoundingClientRect().left; if (dx < 12 || dx + on.offsetWidth > t.clientWidth - 12) t.scrollLeft += dx - 12; } }
 }
 function setTab(tab){
@@ -1281,7 +1288,7 @@ function fuPick(id){
 function kv(ic, k, sub, v){ return `<div class="kv">${ic ? icon(ic, 'lead-ic') : ''}<div class="k"><b>${k}</b>${sub ? `<small>${sub}</small>` : ''}</div>${v ? `<div class="v">${v}</div>` : ''}</div>`; }
 function renderLead(){
   const L = S.lead.data, id = L.id;
-  const { ids, label } = S.nav, i = ids.indexOf(id);
+  const { ids, label } = (S.nav && S.nav.ids) ? S.nav : { ids: [id], label: '' }, i = (ids || []).indexOf(id);
   const pos = i >= 0 ? `${nf.format(i + 1)} / ${nf.format(ids.length)}${label ? `<small>${esc(label)}</small>` : ''}` : L.inBase ? 'в Базе' : '';
   let h = `<header class="d-head"><div class="d-nav"><button type="button" class="cbtn" data-nav="-1" aria-label="Предыдущий"${i > 0 ? '' : ' disabled'}>${icon('left')}</button><span class="d-pos">${pos}</span><button type="button" class="cbtn" data-nav="1" aria-label="${label && i >= ids.length - 1 ? 'Закончить очередь' : 'Следующий'}"${i >= 0 && (i < ids.length - 1 || label) ? '' : ' disabled'}>${icon('right')}</button></div><button type="button" class="cbtn" data-close aria-label="Закрыть">${icon('x')}</button></header>`;
   h += `<div class="d-badges">${kindBadge(L, true)}${repliedBadge(L)}${L.twinN ? `<span class="twin">${icon('phone', 'sm')}×${L.twinN + 1}</span>` : ''}${sBadge(L)}</div>
@@ -1316,7 +1323,7 @@ function renderLead(){
   const draftBox = `<textarea class="input mdraft" name="draft" data-draft="${esc(id)}" rows="5" spellcheck="true" aria-label="Текст сообщения" placeholder="${esc(L.placeholder || 'Текста нет. Напишите ответ, выберите готовый ниже или нажмите ✦…')}">${esc(L.draftText)}</textarea>`;
   h += `<section class="d-sec"><h4>Текст сообщения <small>${(L.draftText || '').trim() ? 'черновик' : L.placeholder ? 'шаблон' : ''}</small></h4>${draftBox}
     ${L.draftOld ? `<p class="mnote" style="margin-top:6px">Этот текст уже отправлен ${esc(L.draftOld)}. Измените его или выберите ответ — получится новое сообщение.</p>` : ''}
-    <span class="dstat" data-dstat="${esc(id)}"></span><p class="dwarn" data-dwarn="${esc(id)}"${L.draftWarn.length ? '' : ' hidden'}>${L.draftWarn.length ? 'Проверьте: ' + esc(L.draftWarn.join('; ')) : ''}</p>
+    <span class="dstat" data-dstat="${esc(id)}"></span><p class="dwarn" data-dwarn="${esc(id)}"${(L.draftWarn && L.draftWarn.length) ? '' : ' hidden'}>${(L.draftWarn && L.draftWarn.length) ? 'Проверьте: ' + esc(L.draftWarn.join('; ')) : ''}</p>
     ${L.quick ? `<div class="mquick" style="margin-top:8px" role="group" aria-label="Готовый ответ">${[['yes', 'После «так»'], ['price', 'Цена'], ['qr', 'Есть QR'], ['boss', 'Руководство']].map(([k, lab]) => `<button type="button" data-quick="${k}" data-id="${esc(id)}">${lab}</button>`).join('')}</div>` : ''}
     <div class="btns" style="margin-top:10px"><button type="button" class="btn" data-copy="text">${icon('copy')}Скопировать текст</button><button type="button" class="btn" data-gen="${esc(id)}"${L.genDone ? ' disabled' : ''}>${icon('spark')}${L.genDone ? 'Дожимов нет' : (L.draftText || '').trim() ? 'Переписать ИИ' : 'Написать ИИ'}</button></div>
     <div class="own-row"><span>Уже написали сами?</span><button type="button" class="pill" data-act="sentPick">Написал в…</button>${L.canMr && L.inBase ? `<button type="button" class="pill" data-mr="${esc(id)}">${L.marked ? 'Снять «ответили»' : 'Ответили'}</button>` : ''}</div></section>`;
@@ -1327,7 +1334,7 @@ function renderLead(){
   if (O.length) h += `<section class="d-sec"><h4>Продавец и сеть</h4><div class="kvlist">${O.join('')}</div></section>`;
   // Контакты и аналитика
   const K = [];
-  (L.phones || []).forEach(p => K.push(kv('phone', `<span class="num">${esc(p.pretty)}</span>`, esc((p.mob ? 'мобильный · ' : 'городской · ') + p.src), `<a class="cbtn" href="tel:+${esc(p.d)}" aria-label="Позвонить ${esc(p.pretty)}">${icon('phone')}</a><button type="button" class="cbtn" data-copyv="${esc(p.pretty)}" aria-label="Скопировать номер">${icon('copy')}</button>`)));
+  (L.phones || []).forEach(p => K.push(kv('phone', `<span class="num">${esc(p.pretty || p.raw || p.d || '')}</span>`, esc((p.mob ? 'мобильный · ' : 'городской · ') + (p.src || 'Google')), `<a class="cbtn" href="tel:+${esc(p.d)}" aria-label="Позвонить ${esc(p.pretty)}">${icon('phone')}</a><button type="button" class="cbtn" data-copyv="${esc(p.pretty)}" aria-label="Скопировать номер">${icon('copy')}</button>`)));
   (L.emails || []).forEach(e => K.push(kv('mail', esc(e), 'почта', `<button type="button" class="cbtn" data-copyv="${esc(e)}" aria-label="Скопировать почту">${icon('copy')}</button>`)));
   if (L.address) K.push(kv('pin', esc(L.address), 'адрес', `<button type="button" class="cbtn" data-copyv="${esc(L.address)}" aria-label="Скопировать адрес">${icon('copy')}</button>${L.maps ? `<button type="button" class="cbtn" data-open="${esc(L.maps)}" aria-label="Google Карты">${icon('external')}</button>` : ''}`));
   if (L.ig) K.push(kv('ig', 'Instagram @' + esc(L.ig.nick), esc(L.ig.dead ? 'профиль не открывается' : [L.ig.followersLabel && L.ig.followersLabel + ' подписчиков', L.ig.posts != null && L.ig.posts + ' публикаций', !L.ig.sure && 'не подтверждён'].filter(Boolean).join(' · ')) + (L.ig.bio ? `<br>«${esc(L.ig.bio)}»` : ''), `<button type="button" class="cbtn" data-open="${esc(L.ig.url)}" aria-label="Открыть профиль">${icon('external')}</button>`));
@@ -1353,6 +1360,7 @@ function callBox(L){
 }
 async function openLead(id, nav){
   if (nav) S.nav = nav;
+  else if (!S.nav || !S.nav.ids) S.nav = { ids: [id], label: '' };
   S.lead = { id, data: null }; S.callOpen = false;
   const dr = $('drawer');
   dr.innerHTML = `<header class="d-head"><div class="d-nav"></div><button type="button" class="cbtn" data-close aria-label="Закрыть">${icon('x')}</button></header>` + skel(3);
@@ -1363,9 +1371,15 @@ async function openLead(id, nav){
   try {
     const d = await api('lead', { id });
     if (!S.lead || S.lead.id !== id) return;
-    if (d.gone) { closeLead(); toast('Этого заведения уже нет в программе'); return; }
-    S.lead.data = d.lead; S.stops = d.lead.stops; renderLead();
-  } catch (e) { fail(e); closeLead(); }
+    if (d.gone) { closeLead(); toast('Этого заведения уже нет в базе'); return; }
+    S.lead.data = d.lead;
+    S.stops = (d.lead && d.lead.stops) || S.stops || [];
+    renderLead();
+  } catch (e) {
+    console.error('Error opening lead:', e);
+    toast('Не удалось открыть карточку: ' + (e.message || e));
+    closeLead();
+  }
 }
 // тихо перечитать открытую карточку (без скелета и без прокрутки наверх)
 async function refreshLead(){
@@ -1471,6 +1485,45 @@ document.addEventListener('click', e => {
   }
   if (t.hasAttribute('data-queue')) { if (S.queue && S.queue.length) openLead(S.queue[0], { ids: S.queue.slice(), label: 'очередь' }); return; }
   if (t.hasAttribute('data-more')) { t.setAttribute('aria-busy', 'true'); viewNew(true).then(() => { const list = $('pList'); if (!list) return; const have = list.querySelectorAll('.card').length; list.insertAdjacentHTML('beforeend', S.parser.items.slice(have).map(pcard).join('')); $('pShown').textContent = nf.format(S.parser.items.length); t.removeAttribute('aria-busy'); const left = +t.dataset.left - (S.parser.items.length - have); t.dataset.left = left; if (left <= 0) t.parentNode.remove(); else t.innerHTML = icon('plus') + `Показать ещё ${Math.min(30, left)} из ${nf.format(left)}`; }).catch(e => { t.removeAttribute('aria-busy'); fail(e); }); return; }
+  if (t.hasAttribute('data-pick-city')) {
+    haptic('sel');
+    const cities = S.cities || [];
+    const allCities = ['Все города'].concat(cities.filter(c => c && c !== 'Все города'));
+    const uniqueCities = Array.from(new Set(allCities));
+    const curCity = P.nf.city || '';
+    pick(
+      'Город поиска',
+      'Выберите город для фильтрации и подгрузки организаций',
+      uniqueCities.map(c => ({
+        label: c,
+        cur: (c === 'Все города' && !curCity) || (c === curCity),
+        fn: () => {
+          keep('nf', Object.assign({}, P.nf, { city: c === 'Все города' ? '' : c }));
+          haptic('sel');
+          show();
+        }
+      }))
+    );
+    return;
+  }
+  if (t.hasAttribute('data-pick-sort')) {
+    haptic('sel');
+    const curSort = P.sort || 'score';
+    pick(
+      'Сортировка лидов',
+      'Выберите порядок отображения карточек в списке',
+      SORTS.map(([k, lab]) => ({
+        label: lab,
+        cur: k === curSort,
+        fn: () => {
+          keep('sort', k);
+          haptic('sel');
+          show();
+        }
+      }))
+    );
+    return;
+  }
   if (t.hasAttribute('data-reset')) { haptic('sel'); keep('nf', {}); show(); return; }
   if (t.hasAttribute('data-run')) { runPick(t); return; }
   if (t.hasAttribute('data-clearq')) { S.q = ''; $('q').value = ''; show(); return; }

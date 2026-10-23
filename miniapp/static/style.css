@@ -1430,7 +1430,17 @@ h2 {
 }
 
 .opt[aria-current="true"] {
-  background: rgba(255, 255, 255, .06);
+  background: rgba(0, 240, 255, .12);
+  color: #00F0FF;
+  border: 1px solid rgba(0, 240, 255, .35);
+  font-weight: 600;
+}
+
+.opt[aria-current="true"]::after {
+  content: "✓";
+  margin-left: auto;
+  font-weight: 700;
+  color: #00F0FF;
 }
 
 .opt i {
