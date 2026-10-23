@@ -104,16 +104,18 @@ async def main() -> None:
     parser_module.setup_parser(client=client, bot=bot_instance)
     bot_module.set_telethon_client(client)
 
-    # Функция запуска Telegram-бота
+    # Функция запуска Telegram-бота с авто-восстановлением при сетевых сбоях
     async def run_bot():
-        try:
-            bot_info = await bot_instance.get_me()
-            logger.info("[OK] Бот @%s запущен. Ссылка: https://t.me/%s", bot_info.username, bot_info.username)
-            await bot_module.setup_bot_commands(bot_instance)
-            await bot_instance.delete_webhook(drop_pending_updates=True)
-            await dp.start_polling(bot_instance)
-        except Exception as e:
-            logger.error("Ошибка при работе бота: %s", e)
+        while True:
+            try:
+                bot_info = await bot_instance.get_me()
+                logger.info("[OK] Бот @%s запущен. Ссылка: https://t.me/%s", bot_info.username, bot_info.username)
+                await bot_module.setup_bot_commands(bot_instance)
+                await bot_instance.delete_webhook(drop_pending_updates=True)
+                await dp.start_polling(bot_instance)
+            except Exception as e:
+                logger.warning("Сетевая пауза в Telegram-боте: %s. Авто-переподключение через 5 сек...", e)
+                await asyncio.sleep(5.0)
 
     # Функция запуска парсера Telethon с защитой от быстрого реконнекта
     async def run_telethon():
