@@ -78,7 +78,7 @@ class AdminStates(StatesGroup):
 
 async def get_plan_price(days: int) -> int:
     if days == 3:
-        val = await db.get_setting("price_3_days", "99")
+        val = await db.get_setting("price_3_days", "0")
     elif days == 30:
         val = await db.get_setting("price_30_days", "490")
     else:
@@ -86,12 +86,12 @@ async def get_plan_price(days: int) -> int:
     try:
         return int(val)
     except Exception:
-        return 99 if days == 3 else (490 if days == 30 else 1490)
+        return 0 if days == 3 else (490 if days == 30 else 1490)
 
 
 async def get_plan_stars(days: int) -> int:
     if days == 3:
-        val = await db.get_setting("stars_3_days", "50")
+        val = await db.get_setting("stars_3_days", "0")
     elif days == 30:
         val = await db.get_setting("stars_30_days", "250")
     else:
@@ -167,6 +167,7 @@ async def setup_bot_commands(bot: Bot) -> None:
     commands = [
         BotCommand(command="start", description="Главное меню"),
         BotCommand(command="app", description="B2B Лидогенератор (Mini App)"),
+        BotCommand(command="trial", description="🎁 Бесплатный PRO (3 дня)"),
         BotCommand(command="filters", description="Готовые фильтры сфер"),
         BotCommand(command="keywords", description="Ключевые слова"),
         BotCommand(command="profile", description="Личный кабинет"),
@@ -317,9 +318,10 @@ async def get_payment_plans_keyboard() -> InlineKeyboardMarkup:
     p3 = await get_plan_price(3)
     p30 = await get_plan_price(30)
     plife = await get_plan_price(999)
+    trial_label = "🎁 3 дня (Пробный) — БЕСПЛАТНО" if p3 == 0 else f"⚡️ 3 дня (Пробный) — {p3} ₽"
     keyboard = [
         [
-            InlineKeyboardButton(text=f"⚡️ 3 дня (Пробный) — {p3} ₽", callback_data=f"plan:3:{p3}"),
+            InlineKeyboardButton(text=trial_label, callback_data=f"plan:3:{p3}"),
         ],
         [
             InlineKeyboardButton(text=f"💎 Месяц: 30 дней — {p30} ₽", callback_data=f"plan:30:{p30}"),
@@ -480,7 +482,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         "А также в реальном времени мониторит фриланс-биржи (Kwork, FL, Habr) и десятки чатов на целевые заказы.\n\n"
         "📍 <i>15+ сфер бизнеса • поиск клиентов в Telegram и браузере • мгновенные уведомления</i>\n\n"
         "💎 <b>Тарифы подписки PRO:</b>\n"
-        "⚡️ <b>3 дня (Пробный)</b> — <b>99 ₽</b> <i>/ 50 ⭐️</i>\n"
+        "🎁 <b>3 дня (Пробный)</b> — <b>БЕСПЛАТНО</b> <i>(0 ₽)</i>\n"
         "🔥 <b>1 месяц (Стандарт)</b> — <b>490 ₽</b> <i>/ 250 ⭐️</i>  <code>[Хит]</code>\n"
         "👑 <b>Навсегда (Безлимит)</b> — <b>1 490 ₽</b> <i>/ 750 ⭐️</i>\n\n"
         "<i>💳 Оплата: СБП, карты любых банков РФ, USDT/TON или Telegram Stars.</i>\n\n"
@@ -593,7 +595,7 @@ async def cb_main_menu(callback: CallbackQuery, state: FSMContext) -> None:
         "LeadHunter находит в Картах (Google & 2GIS) малый бизнес без своего сайта "
         "или с шаблонной страницей вместо него — собирает прямые контакты владельцев (WhatsApp, Telegram, телефон) и помогает написать первым.\n\n"
         "💎 <b>Тарифы подписки PRO:</b>\n"
-        "⚡️ <b>3 дня</b> — <b>99 ₽</b> <i>/ 50 ⭐️</i>\n"
+        "🎁 <b>3 дня (Пробный)</b> — <b>БЕСПЛАТНО</b> <i>(0 ₽)</i>\n"
         "🔥 <b>1 месяц</b> — <b>490 ₽</b> <i>/ 250 ⭐️</i>  <code>[Хит]</code>\n"
         "👑 <b>Навсегда</b> — <b>1 490 ₽</b> <i>/ 750 ⭐️</i>\n\n"
         "<blockquote expandable>"
@@ -735,9 +737,16 @@ async def nav_pro(message: Message, state: FSMContext) -> None:
 @router.callback_query(F.data.in_(["menu_pay_plans", "btn_buy_pro"]))
 async def cb_pay_plans(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
+    p3 = await get_plan_price(3)
+    p30 = await get_plan_price(30)
+    plife = await get_plan_price(999)
+    trial_str = "<b>БЕСПЛАТНО</b>" if p3 == 0 else f"<b>{p3} ₽</b>"
     text = (
         "💎 <b>Тарифные планы подписки PRO:</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🎁 <b>3 дня (Пробный):</b> {trial_str}\n"
+        f"🔥 <b>30 дней (Месяц):</b> <b>{p30} ₽</b>\n"
+        f"👑 <b>Безлимит (Навсегда):</b> <b>{plife} ₽</b>\n\n"
         "<b>Возможности статуса PRO:</b>\n"
         "• 🔓 Полные открытые контакты заказчиков (@username и ссылки)\n"
         "• 🔗 Прямой переход к исходному сообщению в чате в 1 клик\n"
@@ -756,6 +765,43 @@ async def cb_choose_plan(callback: CallbackQuery) -> None:
     _, days_str, price_str = callback.data.split(":")
     days = int(days_str)
     price = int(price_str)
+    user_id = callback.from_user.id
+
+    if days == 3 or price == 0:
+        user = await db.get_user(user_id)
+        if user and user.get("is_pro") == 1 and not db.is_admin(user_id):
+            pro_status = await db.get_pro_status_display(user)
+            await callback.answer(f"У вас уже активен PRO статус ({pro_status})!", show_alert=True)
+            return
+
+        readable_until = await db.give_pro_days(user_id, days=3)
+        user = await db.get_user(user_id)
+        pro_status = await db.get_pro_status_display(user)
+
+        success_text = (
+            "🎉 <b>БЕСПЛАТНЫЙ ПРОБНЫЙ ПЕРИОД PRO АКТИВИРОВАН!</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"💎 <b>Ваш статус:</b> {pro_status}\n"
+            f"⏱ <b>Срок действия:</b> 3 дня ({readable_until})\n\n"
+            "<b>Вам открыт полный безлимитный доступ:</b>\n"
+            "• 🔓 Прямые контакты заказчиков (@username, телефон, ссылки)\n"
+            "• 🎯 B2B Web-терминал поиска заведений без сайта на картах\n"
+            "• ⚡️ Мгновенный перехват заказов с бирж (FL, Kwork, Habr)\n"
+            "• ✨ AI-генератор продающих офферов под ниши\n\n"
+            "👇 <i>Запустите Web-терминал прямо сейчас:</i>"
+        )
+        app_url = getattr(config, "MINI_APP_URL", "")
+        buttons = []
+        if app_url.startswith("https://"):
+            buttons.append([InlineKeyboardButton(text="⚡️ Запустить B2B Поиск (App)", web_app=WebAppInfo(url=app_url))])
+        else:
+            buttons.append([InlineKeyboardButton(text="⚡️ Запустить B2B Поиск", callback_data="btn_open_miniapp")])
+        buttons.append([InlineKeyboardButton(text="🎯 Настроить фильтры заказов", callback_data="menu_categories")])
+        buttons.append([InlineKeyboardButton(text="🏠 Главное меню", callback_data="btn_main_menu")])
+
+        await callback.message.edit_text(success_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode="HTML")
+        await callback.answer("🎁 Бесплатный пробный период активирован!")
+        return
 
     period_label = "3 дня (Тест)" if days == 3 else ("30 дней (Месяц)" if days == 30 else "Навсегда (Lifetime)")
 
@@ -2761,3 +2807,44 @@ async def cmd_set_sbp(message: Message) -> None:
     if len(parts) >= 2 and parts[1].strip():
         await db.set_setting("pay_sbp_bank", parts[1].strip())
     await message.answer(f"<b>✅ Реквизиты СБП обновлены:</b> <code>{phone}</code>", parse_mode="HTML")
+
+
+@router.message(Command("trial"))
+async def cmd_free_trial(message: Message) -> None:
+    user_id = message.from_user.id
+    user = await db.get_user(user_id)
+    if not user:
+        await db.add_user(user_id)
+        user = await db.get_user(user_id)
+
+    if user and user.get("is_pro") == 1 and not db.is_admin(user_id):
+        pro_status = await db.get_pro_status_display(user)
+        await message.answer(f"💎 У вас уже активен PRO статус: {pro_status}")
+        return
+
+    readable_until = await db.give_pro_days(user_id, days=3)
+    user = await db.get_user(user_id)
+    pro_status = await db.get_pro_status_display(user)
+
+    success_text = (
+        "🎉 <b>БЕСПЛАТНЫЙ ПРОБНЫЙ ПЕРИОД PRO АКТИВИРОВАН!</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"💎 <b>Ваш статус:</b> {pro_status}\n"
+        f"⏱ <b>Срок действия:</b> 3 дня ({readable_until})\n\n"
+        "<b>Вам открыт полный безлимитный доступ:</b>\n"
+        "• 🔓 Прямые контакты заказчиков (@username, телефон, ссылки)\n"
+        "• 🎯 B2B Web-терминал поиска заведений без сайта на картах\n"
+        "• ⚡️ Мгновенный перехват заказов с бирж (FL, Kwork, Habr)\n"
+        "• ✨ AI-генератор продающих офферов под ниши\n\n"
+        "👇 <i>Запустите Web-терминал прямо сейчас:</i>"
+    )
+    app_url = getattr(config, "MINI_APP_URL", "")
+    buttons = []
+    if app_url.startswith("https://"):
+        buttons.append([InlineKeyboardButton(text="⚡️ Запустить B2B Поиск (App)", web_app=WebAppInfo(url=app_url))])
+    else:
+        buttons.append([InlineKeyboardButton(text="⚡️ Запустить B2B Поиск", callback_data="btn_open_miniapp")])
+    buttons.append([InlineKeyboardButton(text="🎯 Настроить фильтры заказов", callback_data="menu_categories")])
+    buttons.append([InlineKeyboardButton(text="🏠 Главное меню", callback_data="btn_main_menu")])
+
+    await message.answer(success_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode="HTML")
