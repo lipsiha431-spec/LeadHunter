@@ -456,63 +456,9 @@ async def search_places_google(
     return results
 
 
-def generate_local_city_leads(query: str, city: str, sphere_id: str = "food") -> list[dict[str, Any]]:
-    """Локальный генератор для малых населенных пунктов."""
-    templates = {
-        "food": [
-            ("Кофейня «Espresso Bar»", "Центральная улица", "+7 918 340-12-88", "", "hot", "Нет сайта"),
-            ("Пиццерия «Палермо»", "ул. Ленина, 18", "+7 928 450-23-41", "https://instagram.com/palermo_pizza", "hot", "Вместо сайта: instagram.com"),
-            ("Пекарня & Кондитерская «Круассан»", "пр. Мира, 32", "+7 938 120-77-55", "", "hot", "Нет сайта"),
-            ("Суши-маркет «Yami Yami»", "ул. Садовая, 14", "+7 905 880-44-11", "https://taplink.cc/yami_sushi", "hot", "Вместо сайта: taplink.cc"),
-            ("Гастробар «Loft Lounge»", "ул. Пушкина, 7", "+7 999 710-55-90", "https://loft.choiceqr.com", "warm", "Шаблонное QR-меню: ChoiceQR"),
-            ("Кафе-бистро «Утро»", "ул. Советская, 45", "+7 912 600-88-22", "", "hot", "Нет сайта"),
-            ("Бургерная «Мясо & Огонь»", "ул. Мира, 10", "+7 904 550-11-22", "", "hot", "Нет сайта"),
-            ("Ресторан «Традиция»", "ул. Набережная, 2", "+7 917 220-33-44", "https://instagram.com/rest_tradition", "hot", "Вместо сайта: instagram.com"),
-        ],
-        "beauty": [
-            ("Барбершоп «Chop & Razor»", "ул. Ленина, 25", "+7 926 710-44-33", "https://instagram.com/chop_razor", "hot", "Вместо сайта: instagram.com"),
-            ("Студия красоты «Mon Amour»", "пр. Победы, 11", "+7 915 820-99-10", "https://dikidi.net/monamour", "warm", "Шаблонный сервис: DIKIDI"),
-            ("Салон маникюра «Velvet»", "ул. Гагарина, 8", "+7 903 140-55-66", "", "hot", "Нет сайта"),
-            ("Косметология «Dr. Skin»", "ул. Чехова, 22", "+7 925 930-77-44", "https://alteg.io/dr_skin", "warm", "Шаблонный сервис: Altegio"),
-            ("SPA студия «Lotus Relax»", "ул. Парковая, 5", "+7 918 420-11-22", "", "hot", "Нет сайта"),
-            ("Студия взгляда «Lash & Brow»", "пр. Ленина, 3", "+7 999 410-88-77", "", "hot", "Нет сайта"),
-        ],
-        "auto": [
-            ("Детейлинг студия «Royal Gloss»", "ул. Промышленная, 15", "+7 926 310-77-88", "https://instagram.com/royalgloss_auto", "hot", "Вместо сайта: instagram.com"),
-            ("Автосервис «СТО Мастер»", "Заводской проезд, 4", "+7 916 420-55-66", "", "hot", "Нет сайта"),
-            ("Шиномонтаж & Автомойка «Aqua Clean»", "ул. Северная, 40", "+7 905 530-88-99", "https://avito.ru/aquaclean_city", "hot", "Вместо сайта: avito.ru"),
-            ("Автоподбор & Диагностика", "ул. Транспортная, 2", "+7 999 810-22-33", "", "hot", "Нет сайта"),
-            ("Кузовной ремонт «Автостандарт»", "ул. Строителей, 8", "+7 903 660-44-55", "", "hot", "Нет сайта"),
-        ],
-        "lodging": [
-            ("Глэмпинг & Коттеджи «Лесной Уют»", "Пригородная зона, 12", "+7 926 510-99-00", "https://instagram.com/forest_glamp", "hot", "Вместо сайта: instagram.com"),
-            ("Апарт-отель «Централь»", "ул. Театральная, 9", "+7 916 720-33-44", "https://bnovo.ru/central_hotel", "warm", "Модуль бронирования: Bnovo"),
-            ("Гостевой дом «У Реки»", "Набережная, 28", "+7 903 830-44-55", "", "hot", "Нет сайта"),
-            ("Хостел «Центр Лайф»", "ул. Советская, 15", "+7 999 330-22-11", "", "hot", "Нет сайта"),
-        ],
-    }
-
-    presets = templates.get(sphere_id, templates["food"])
-    leads = []
-    for idx, (name, addr, phone, web, status, lab) in enumerate(presets, 1):
-        contacts = extract_socials_and_contacts(phone, web)
-        leads.append({
-            "place_id": f"live_{sphere_id}_{idx}",
-            "name": name,
-            "address": f"{city}, {addr}",
-            "phone": phone,
-            "website": web,
-            "rating": round(4.5 + (idx % 4) * 0.1, 1),
-            "user_ratings_total": 35 + idx * 24,
-            "google_maps_url": f"https://maps.google.com/?q={urllib.parse.quote(name + ' ' + (addr or city))}",
-            "yandex_maps_url": f"https://yandex.ru/maps/?text={urllib.parse.quote(name + ' ' + (addr or city))}",
-            "dgis_url": f"https://2gis.ru/search/{urllib.parse.quote(name + ' ' + (addr or city))}",
-            "status_lead": status,
-            "status_label": lab,
-            "primary_type": query or "Бизнес",
-            **contacts,
-        })
-    return leads
+def generate_local_city_leads(query: str, city: str, sphere_id: str = "food", count: int = 60) -> list[dict[str, Any]]:
+    """Локальный генератор организаций на базе проверенных комбинаторных шаблонов LeadHunter."""
+    return get_curated_city_leads(query=query, city=city, sphere_id=sphere_id, count=count)
 
 
 async def search_leads(

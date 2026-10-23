@@ -253,29 +253,71 @@ def format_rz_lead(lead: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def detect_sphere_id(text: str) -> str:
+    """Определяет ID сферы бизнеса по названию категории или поисковому запросу."""
+    t = (text or "").lower()
+    if any(w in t for w in ["красот", "барбер", "салон", "маникюр", "волос", "парикмахер", "ресниц", "бров", "тату", "спа", "косметол"]):
+        return "beauty"
+    if any(w in t for w in ["авто", "сервис", "мойк", "шин", "детейлинг", "ремонт авто", "сто"]):
+        return "auto"
+    if any(w in t for w in ["здоров", "клиник", "стомат", "медицин", "врач", "зуб", "анализ", "остеопат"]):
+        return "health"
+    if any(w in t for w in ["спорт", "фитнес", "йог", "зал", "тренировк", "бокс", "танц", "кроссфит"]):
+        return "sport"
+    if any(w in t for w in ["отел", "гостиниц", "хостел", "глэмпинг", "турбаз", "коттедж"]):
+        return "lodging"
+    if any(w in t for w in ["ремонт", "мебель", "интерьер", "дизайн", "потол", "квартир"]):
+        return "home"
+    if any(w in t for w in ["животн", "вет", "груминг", "собак", "кошек", "зоо"]):
+        return "pets"
+    if any(w in t for w in ["обучен", "школ", "курс", "английск", "егэ", "репетитор"]):
+        return "education"
+    if any(w in t for w in ["юрист", "бухгалтер", "агентств", "консалт", "it", "разработк"]):
+        return "services"
+    return "food"
+
+
 async def ensure_initial_seed_leads(user_id: int):
-    """Наполняет базу качественными стартовыми лидами, если в ней нет новых лидов."""
+    """Наполняет базу качественными стартовыми лидами, если в ней мало новых лидов."""
     existing = await db.get_b2b_leads(user_id)
     new_ones = [l for l in existing if l.get("stage", "new") == "new"]
-    if len(new_ones) >= 4:
+    if len(new_ones) >= 60:
         return
 
-    curated = get_curated_city_leads("Москва", "food")
-    for i, c in enumerate(curated[:10]):
-        lead_dict = {
-            "name": c.get("name", f"Заведение {i+1}"),
-            "city": c.get("city", "Москва"),
-            "category": c.get("category", "Ресторан"),
-            "address": c.get("address", "ул. Тверская"),
-            "phone": c.get("phone", "+7 (926) 123-45-67"),
-            "website": c.get("website", ""),
-            "rating": c.get("rating", 4.8),
-            "user_ratings_total": c.get("user_ratings_total", 45),
-            "status_lead": c.get("status_lead", "hot"),
-            "stage": "new",
-            "notes": ""
-        }
-        await db.save_b2b_lead(user_id, lead_dict)
+    seed_plans = [
+        ("Москва", "food", 35),
+        ("Москва", "beauty", 25),
+        ("Москва", "auto", 20),
+        ("Санкт-Петербург", "food", 30),
+        ("Санкт-Петербург", "beauty", 20),
+        ("Казань", "food", 25),
+        ("Краснодар", "beauty", 20),
+        ("Сочи", "lodging", 20),
+        ("Екатеринбург", "health", 20),
+    ]
+
+    leads_to_save = []
+    for city_name, sphere, count in seed_plans:
+        curated = get_curated_city_leads(city=city_name, sphere_id=sphere, count=count)
+        for c in curated:
+            leads_to_save.append({
+                "place_id": c.get("place_id"),
+                "name": c.get("name", "Организация"),
+                "city": c.get("city", city_name),
+                "category": c.get("category", c.get("primary_type", "Бизнес")),
+                "address": c.get("address", ""),
+                "phone": c.get("phone", ""),
+                "website": c.get("website", ""),
+                "rating": c.get("rating", 4.8),
+                "user_ratings_total": c.get("user_ratings_total", 45),
+                "status_lead": c.get("status_lead", "hot"),
+                "stage": "new",
+                "notes": "",
+                "draft": c.get("draft", "")
+            })
+
+    if leads_to_save:
+        await db.save_b2b_leads_batch(user_id, leads_to_save)
 
 
 async def background_search_task(city: str, cat: str, user_id: int):
@@ -285,12 +327,12 @@ async def background_search_task(city: str, cat: str, user_id: int):
     RUN_STATE["city"] = city
     RUN_STATE["cat"] = cat
     RUN_STATE["pct"] = 15
-    RUN_STATE["msg"] = f"Сканирую Google Карты: {cat} в г. {city}..."
+    RUN_STATE["msg"] = f"Сканирую карты: {cat} в г. {city}..."
 
     try:
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(0.5)
         RUN_STATE["pct"] = 40
-        RUN_STATE["msg"] = "Анализ сайтов и фильтрация шаблонных меню..."
+        RUN_STATE["msg"] = "Анализ сайтов, фильтрация и проверка контактов..."
 
         effective_key = getattr(config, "GOOGLE_PLACES_API_KEY", "")
         if user_id:
@@ -298,22 +340,25 @@ async def background_search_task(city: str, cat: str, user_id: int):
             if profile.get("google_api_key"):
                 effective_key = profile["google_api_key"]
 
+        sphere_id = detect_sphere_id(cat)
         found = await search_leads(
             query=f"{cat} {city}",
             city=city,
-            sphere_id="food",
-            depth="deep",
+            sphere_id=sphere_id,
+            depth="max",
             api_key=effective_key,
-            page_size=35
+            page_size=150
         )
 
         RUN_STATE["pct"] = 80
-        RUN_STATE["msg"] = f"Сохранение {len(found)} заведений в базу..."
+        RUN_STATE["msg"] = f"Сохранение {len(found)} заведений в базу CRM..."
 
+        leads_to_save = []
         for item in found:
-            lead_dict = {
+            leads_to_save.append({
+                "place_id": item.get("place_id"),
                 "name": item.get("name", ""),
-                "city": city,
+                "city": item.get("city", city),
                 "category": item.get("category", cat),
                 "address": item.get("address", ""),
                 "phone": item.get("phone", ""),
@@ -322,9 +367,12 @@ async def background_search_task(city: str, cat: str, user_id: int):
                 "user_ratings_total": item.get("user_ratings_total", 30),
                 "status_lead": item.get("status_lead", "hot"),
                 "stage": "new",
-                "notes": ""
-            }
-            await db.save_b2b_lead(user_id, lead_dict)
+                "notes": "",
+                "draft": ""
+            })
+
+        if leads_to_save:
+            await db.save_b2b_leads_batch(user_id, leads_to_save)
 
         RUN_STATE["found"] = len(found)
         RUN_STATE["total"] = len(found)
@@ -334,6 +382,7 @@ async def background_search_task(city: str, cat: str, user_id: int):
         RUN_STATE["msg"] = f"Ошибка поиска: {str(e)}"
     finally:
         RUN_STATE["running"] = False
+
 
 
 async def handle_rpc_call(op: str, args: dict[str, Any], user_id: int) -> dict[str, Any]:
@@ -414,15 +463,44 @@ async def handle_rpc_call(op: str, args: dict[str, Any], user_id: int) -> dict[s
 
     # 2. ПАРСЕР / НОВЫЕ ЛИДЫ
     if op == "new":
-        city_filter = str(args.get("city", "")).strip().lower()
+        raw_city = str(args.get("city", "")).strip()
+        city_filter = raw_city.lower()
         kind_filter = str(args.get("kind", "")).strip().lower()
         mob_filter = bool(args.get("mob", False))
         sort = str(args.get("sort", "score"))
         off = max(0, int(args.get("off", 0)))
-        limit = max(1, min(1000, int(args.get("limit", 30))))
+        limit = max(1, min(1000, int(args.get("limit", 40))))
+
+        # Если выбран конкретный город, проверяем сколько лидов для него есть в базе
+        # Если меньше 35, мгновенно генерируем свежие лиды для этого города
+        if raw_city and raw_city.lower() not in ("все города", "все", ""):
+            city_matches = [l for l in new_leads if city_filter in l.get("city", "").lower()]
+            if len(city_matches) < 40:
+                fresh_leads_raw = get_curated_city_leads(city=raw_city, sphere_id="food", count=60)
+                leads_to_save = []
+                for c in fresh_leads_raw:
+                    leads_to_save.append({
+                        "place_id": c.get("place_id"),
+                        "name": c.get("name", "Организация"),
+                        "city": raw_city,
+                        "category": c.get("category", "Бизнес"),
+                        "address": c.get("address", ""),
+                        "phone": c.get("phone", ""),
+                        "website": c.get("website", ""),
+                        "rating": c.get("rating", 4.8),
+                        "user_ratings_total": c.get("user_ratings_total", 45),
+                        "status_lead": c.get("status_lead", "hot"),
+                        "stage": "new",
+                        "notes": "",
+                        "draft": ""
+                    })
+                await db.save_b2b_leads_batch(user_id, leads_to_save)
+                # Перечитываем обновленный список лидов
+                all_leads = await db.get_b2b_leads(user_id)
+                new_leads = [l for l in all_leads if l.get("stage", "new") == "new"]
 
         filtered = new_leads[:]
-        if city_filter:
+        if city_filter and city_filter not in ("все города", "все", ""):
             filtered = [l for l in filtered if city_filter in l.get("city", "").lower()]
         if kind_filter:
             if kind_filter == "hot":
@@ -442,9 +520,14 @@ async def handle_rpc_call(op: str, args: dict[str, Any], user_id: int) -> dict[s
             # score: hot first, high rating
             filtered.sort(key=lambda x: (1 if x.get("status_lead") == "hot" else 0, float(x.get("rating", 0))), reverse=True)
 
-        cities_list = sorted(list(set(l.get("city", "Москва") for l in all_leads if l.get("city"))))
-        if not cities_list:
-            cities_list = ["Москва", "Санкт-Петербург", "Казань"]
+        popular_cities = [
+            "Москва", "Санкт-Петербург", "Казань", "Новосибирск", "Екатеринбург",
+            "Нижний Новгород", "Самара", "Краснодар", "Ростов-на-Дону", "Уфа",
+            "Челябинск", "Красноярск", "Пермь", "Воронеж", "Волгоград",
+            "Тюмень", "Сочи", "Калининград", "Саратов", "Тольятти"
+        ]
+        db_cities = [l.get("city") for l in all_leads if l.get("city")]
+        cities_list = sorted(list(dict.fromkeys(db_cities + popular_cities)))
 
         page_items = filtered[off:off + limit]
 
@@ -454,7 +537,7 @@ async def handle_rpc_call(op: str, args: dict[str, Any], user_id: int) -> dict[s
             "hot": sum(1 for l in filtered if l.get("status_lead") == "hot" or not l.get("website")),
             "warm": sum(1 for l in filtered if l.get("status_lead") == "warm"),
             "cities": cities_list,
-            "filter": {"city": args.get("city", ""), "kind": args.get("kind", ""), "mob": mob_filter},
+            "filter": {"city": raw_city, "kind": args.get("kind", ""), "mob": mob_filter},
             "sort": sort,
             "off": off,
             "more": len(filtered) > off + limit,

@@ -627,6 +627,64 @@ async def save_b2b_lead(user_id: int, lead: dict[str, Any]) -> bool:
         return True
 
 
+async def save_b2b_leads_batch(user_id: int, leads: list[dict[str, Any]]) -> int:
+    """Массово сохраняет список B2B лидов за одну быструю транзакцию."""
+    if not leads:
+        return 0
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    records = []
+    for lead in leads:
+        place_id = str(lead.get("place_id") or lead.get("id") or lead.get("name"))
+        name = str(lead.get("name", "Без названия"))
+        city = str(lead.get("city", "Москва"))
+        category = str(lead.get("category", ""))
+        address = str(lead.get("address", ""))
+        phone = str(lead.get("phone", ""))
+        website = str(lead.get("website", ""))
+        social_links = str(lead.get("social_links", ""))
+        status_lead = str(lead.get("status_lead", "hot"))
+        stage = str(lead.get("stage", "new"))
+        notes = str(lead.get("notes", ""))
+        pitch = str(lead.get("pitch", ""))
+        draft = str(lead.get("draft", ""))
+        rating = float(lead.get("rating", 0.0) or 0.0)
+        user_ratings_total = int(lead.get("user_ratings_total", 0) or 0)
+        records.append((
+            user_id, place_id, name, address, phone, website,
+            social_links, status_lead, stage, notes, pitch,
+            rating, user_ratings_total, now_str, now_str,
+            city, category, draft
+        ))
+
+    async with get_connection() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO b2b_leads (
+                user_id, place_id, name, address, phone, website,
+                social_links, status_lead, stage, notes, pitch,
+                rating, user_ratings_total, created_at, updated_at,
+                city, category, draft
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, place_id) DO UPDATE SET
+                name = excluded.name,
+                city = excluded.city,
+                category = excluded.category,
+                address = excluded.address,
+                phone = excluded.phone,
+                website = excluded.website,
+                social_links = excluded.social_links,
+                status_lead = excluded.status_lead,
+                rating = excluded.rating,
+                user_ratings_total = excluded.user_ratings_total,
+                draft = excluded.draft,
+                updated_at = excluded.updated_at
+            """,
+            records
+        )
+        await conn.commit()
+        return len(records)
+
+
 async def get_b2b_leads(user_id: int, stage: Optional[str] = None) -> list[dict[str, Any]]:
     """Получает сохраненных B2B лидов пользователя из CRM."""
     async with get_connection() as conn:

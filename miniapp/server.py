@@ -330,6 +330,7 @@ def create_app() -> web.Application:
     app.router.add_get("/bg.js", handle_bg_js)
     app.router.add_get("/logo.png", handle_logo_png)
     app.router.add_post("/api", handle_rpc_api)
+    app.router.add_post("/api/rpc", handle_rpc_api)
     app.router.add_get("/api/spheres", handle_spheres)
     app.router.add_get("/api/cities", handle_cities)
     app.router.add_post("/api/verify_key", handle_verify_key)
