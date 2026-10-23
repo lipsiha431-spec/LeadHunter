@@ -613,6 +613,7 @@ async def save_b2b_lead(user_id: int, lead: dict[str, Any]) -> bool:
                 status_lead = excluded.status_lead,
                 rating = excluded.rating,
                 user_ratings_total = excluded.user_ratings_total,
+                pitch = excluded.pitch,
                 draft = excluded.draft,
                 updated_at = excluded.updated_at
             """,
@@ -676,6 +677,7 @@ async def save_b2b_leads_batch(user_id: int, leads: list[dict[str, Any]]) -> int
                 status_lead = excluded.status_lead,
                 rating = excluded.rating,
                 user_ratings_total = excluded.user_ratings_total,
+                pitch = excluded.pitch,
                 draft = excluded.draft,
                 updated_at = excluded.updated_at
             """,
@@ -714,6 +716,30 @@ async def update_b2b_lead_stage(user_id: int, lead_id: int, stage: str, notes: O
                 "UPDATE b2b_leads SET stage = ?, updated_at = ? WHERE user_id = ? AND id = ?",
                 (stage, now_str, user_id, lead_id)
             )
+        await conn.commit()
+        return True
+
+
+async def update_b2b_lead_draft(user_id: int, lead_id: int, draft: str) -> bool:
+    """Обновляет черновик сообщения (draft и pitch) по лиду в базе данных."""
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async with get_connection() as conn:
+        await conn.execute(
+            "UPDATE b2b_leads SET draft = ?, pitch = ?, updated_at = ? WHERE (user_id = ? OR user_id = 0) AND id = ?",
+            (draft, draft, now_str, user_id, lead_id)
+        )
+        await conn.commit()
+        return True
+
+
+async def update_b2b_lead_phone(user_id: int, lead_id: int, phone: str) -> bool:
+    """Обновляет телефон лида в базе данных."""
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    async with get_connection() as conn:
+        await conn.execute(
+            "UPDATE b2b_leads SET phone = ?, updated_at = ? WHERE (user_id = ? OR user_id = 0) AND id = ?",
+            (phone, now_str, user_id, lead_id)
+        )
         await conn.commit()
         return True
 

@@ -14,26 +14,51 @@ def find_sphere_by_id(sphere_id: str) -> Optional[dict]:
     return None
 
 
+PITCH_STYLES = ["hook", "prototype", "roi", "expert", "short", "local"]
+
+
+def get_next_pitch_style(current_pitch: str = "") -> str:
+    """Определяет следующий стиль оффера при каждом клике «Переписать ИИ»."""
+    if not current_pitch:
+        return "hook"
+    curr = current_pitch.lower()
+    if "упущенной выгоды" in curr or "потеря заведения" in curr or "roi" in curr or "чек" in curr:
+        return "expert"
+    elif "концепт" in curr or "прототип" in curr or "24 часа" in curr:
+        return "roi"
+    elif "эксперт" in curr or "занимаюсь разработкой" in curr or "отсеиваются" in curr:
+        return "short"
+    elif len(current_pitch.strip()) < 180:
+        return "local"
+    elif "местный веб-разработчик" in curr or "локальн" in curr or "сосед" in curr:
+        return "hook"
+    else:
+        return "prototype"
+
+
 def generate_pitch(
     business_name: str,
     sphere_id: str,
     status_lead: str = "hot",
     freelancer_name: str = "",
     city: str = "",
-    style: str = "hook"  # 'hook' (с крючка), 'expert' (экспертный), 'short' (короткий)
+    style: str = "hook"
 ) -> str:
     """
-    Генерирует живое, ненавязчивое первое сообщение в 3 стилях:
+    Генерирует живое, ненавязчивое первое сообщение в 6 стилях:
     - hook: факт о заведении первым предложением (видно в пуш-уведомлении)
-    - expert: классическое вежливое представление с предложением макета
+    - prototype: готовый бесплатный прототип/макет за 24 часа
+    - roi: расчет упущенной выгоды и окупаемости сайта
+    - expert: классическое вежливое представление с предложением аудита
     - short: ультракороткий оффер для WhatsApp и SMS (2-3 предложения)
+    - local: оффер от локального веб-разработчика с фокусом на город
     """
     f_name = freelancer_name.strip()
     c_name = city.strip()
     b_name = business_name.strip() or "вашего заведения"
     sphere = find_sphere_by_id(sphere_id) or SPHERES[0]
 
-    # --- СТИЛЬ 1: С КРЮЧКА (HOOK) — лучший Open Rate в Direct и TG ---
+    # --- СТИЛЬ 1: С КРЮЧКА (HOOK) ---
     if style == "hook":
         if status_lead == "hot":
             if sphere["id"] == "food":
@@ -66,7 +91,7 @@ def generate_pitch(
             else:
                 return (
                     f"Добрый день! Заметил, что у «{b_name}» на картах пока нет сайта, и часть клиентов из поиска уходит к конкурентам.\n\n"
-                    f"Я{' ' + f_name if f_name else ''} разрабатываю продающие сайты для заведений сферы «{sphere['name']}»{(' в ' + c_name) if c_name else ''}. "
+                    f"Я{' ' + f_name if f_name else ''} разрабатываю продающие сайты для сферы «{sphere['name']}»{(' в ' + c_name) if c_name else ''}. "
                     f"Могу сделать черновик сайта под ваши услуги с ценами и заявкой.\n\n"
                     f"Интересно взглянуть на такой макет?"
                 )
@@ -77,7 +102,30 @@ def generate_pitch(
                 f"Показать, как это будет выглядеть?"
             )
 
-    # --- СТИЛЬ 2: ЭКСПЕРТНЫЙ (EXPERT) ---
+    # --- СТИЛЬ 2: ГОТОВЫЙ ПРОТОТИП (PROTOTYPE) ---
+    elif style == "prototype":
+        name_intro = f"Меня зовут {f_name}. " if f_name else ""
+        return (
+            f"Приветствую! {name_intro}Я подготовил черновой концепт-макет сайта для «{b_name}»{(' в г. ' + c_name) if c_name else ''}.\n\n"
+            f"Сделал адаптивный дизайн под смартфоны: каталог ключевых услуг, онлайн-заявку в 1 клик и интеграцию с мессенджерами. "
+            f"Сайт открывается за 0.8 секунды прямо из карточки карт и соцсетей.\n\n"
+            f"Денег за просмотр не беру — могу прислать ссылку на демо, чтобы вы оценили удобство со смартфона. Отправить?"
+        )
+
+    # --- СТИЛЬ 3: РАСЧЕТ ROI И УПУЩЕННОЙ ВЫГОДЫ (ROI) ---
+    elif style == "roi":
+        roi_data = calculate_business_roi(sphere["id"])
+        views = roi_data["monthly_views"]
+        lost = roi_data["lost_clients"]
+        loss_rev = roi_data["formatted_revenue"]
+        return (
+            f"Здравствуйте! Провел небольшой аудит карточки «{b_name}» на картах.\n\n"
+            f"По статистике запросов в вашем районе карточку просматривают ~{views} потенциальных гостей в месяц. "
+            f"Около {lost} из них не звонят, а сразу ищут сайт с прайсом/меню. При среднем чеке ниши упущенная выручка составляет до {loss_rev} ₽ ежемесячно.\n\n"
+            f"Собственный сайт окупается за первую неделю работы. Могу показать на живых цифрах, как закрывать этих клиентов. Интересно обсудить?"
+        )
+
+    # --- СТИЛЬ 4: ЭКСПЕРТНЫЙ (EXPERT) ---
     elif style == "expert":
         name_intro = f"Меня зовут {f_name}, " if f_name else ""
         if status_lead == "hot":
@@ -95,7 +143,17 @@ def generate_pitch(
                 f"Если вам актуально — с радостью покажу живые кейсы и набросаю концепт для вас. Что скажете?"
             )
 
-    # --- СТИЛЬ 3: УЛЬТРАКОРОТКИЙ (SHORT) — для WhatsApp, SMS и Telegram ---
+    # --- СТИЛЬ 5: ЛОКАЛЬНЫЙ РАЗРАБОТЧИК (LOCAL) ---
+    elif style == "local":
+        city_ref = f" у нас в {c_name}" if c_name else ""
+        return (
+            f"Добрый день! Живу и работаю веб-мастером{city_ref}. Часто прохожу мимо «{b_name}» или вижу вас в рекомендациях.\n\n"
+            f"У вас классный проект и высокий рейтинг, но нет удобного сайта для записи и заказа со смартфона. "
+            f"Недавно запускал сайт для похожего проекта — поток заявок из карт вырос на 40% без трат на рекламу.\n\n"
+            f"Хочу предложить сделать такой же эффективный сайт для вас. Могу прислать ссылку на кейс?"
+        )
+
+    # --- СТИЛЬ 6: УЛЬТРАКОРОТКИЙ (SHORT) — для WhatsApp, SMS и Telegram ---
     else:
         if status_lead == "hot":
             return (

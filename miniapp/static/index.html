@@ -881,6 +881,12 @@ function openUrl(url){
   // только известные схемы: адрес карты может прийти из импортированной таблицы, а javascript: здесь увидел бы initData
   if (!url || !/^(https?:|tg:|viber:|whatsapp:|tel:|mailto:|sms:)/i.test(url)) return;
   try {
+    if (tg && /^tg:\/\/resolve\?phone=(\d+)/.test(url)) {
+      const ph = url.match(/^tg:\/\/resolve\?phone=(\d+)/)[1];
+      if (typeof tg.openTelegramLink === 'function') {
+        try { tg.openTelegramLink('https://t.me/+' + ph); return; } catch {}
+      }
+    }
     if (tg && /^https:\/\/t\.me\//.test(url)) return tg.openTelegramLink(url);
     if (tg && /^https?:\/\//.test(url)) return tg.openLink(url);
   } catch {}
@@ -1114,7 +1120,6 @@ async function contact(src, ch, owner, forced, btn){
   const links = owner ? src.ownerLinks || [] : src.links || [];
   const k0 = links.find(x => x.ch === ch), k = k0 && Object.assign({}, k0);
   if (!k) { toast(`${CH[ch][0]}: ссылки нет — нет мобильного номера или профиля.`); return; }
-  if (!S.me || src.me === false) { toast('Сначала впишите имя, регион и цену в программе: Настройки → «Обо мне».'); return; }
   if (!owner && !forced && src.claim && !S.claimOk[src.id]) {   // 3.10: уже трогали — как в окне, переспрашиваем
     pick('Уже трогали', `«${src.name}» — ${claimTxt(src.claim)}${/\.$/.test(claimTxt(src.claim)) ? '' : '.'}\n\nВладелец, скорее всего, уже получил такое же предложение — повторное сообщение он примет за спам.`,
       [{ label: `Всё равно открыть ${k.label}`, pri: true, fn: () => { S.claimOk[src.id] = 1; contact(src, ch, owner, forced, btn); } }]);
@@ -1147,6 +1152,9 @@ async function contact(src, ch, owner, forced, btn){
   let text = owner ? src.ownerText : src.text;
   if (!owner && box && (box && box.value ? box.value.trim() : '') && !risky) text = box.value;
   const copied = text ? copyNow(text) : null;
+  if (k.ch === 'tg' && text) {
+    toast('✨ Текст скопирован! Вставьте его в чат Telegram.');
+  }
   // в ссылке wa.me программа уже прислала свой text= (старый черновик) — ставим текущий текст вместо него, а не только в пустой
   if (k.ch === 'wa' && text) k.url = /[?&]text=/.test(k.url) ? k.url.replace(/([?&]text=)[^&#]*/, (m, p) => p + encodeURIComponent(text)) : k.url + (k.url.includes('?') ? '&' : '?') + 'text=' + encodeURIComponent(text);
   // не ждём: iOS открывает viber:/whatsapp: только сразу по нажатию. Касание уходит после сохранения черновика

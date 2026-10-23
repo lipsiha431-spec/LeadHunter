@@ -633,18 +633,12 @@ def get_curated_city_leads(
             website = f"https://{slug}-{city_key[:3]}.ru"
             status_label = "Собственный сайт"
 
-        # Телефон: 70% мобильный (+7 9xx) с готовым WhatsApp, 30% городской
-        if idx % 10 < 7:
-            mobile_prefix = 900 + (abs(hash(display_name)) % 95)
-            part1 = 100 + (idx * 37) % 899
-            part2 = 10 + (idx * 23) % 89
-            part3 = 10 + (idx * 41) % 89
-            phone_raw = f"+7 ({mobile_prefix}) {part1}-{part2}-{part3}"
-        else:
-            part1 = 200 + (idx * 31) % 790
-            part2 = 10 + (idx * 17) % 89
-            part3 = 10 + (idx * 29) % 89
-            phone_raw = f"+7 ({city_code}) {part1}-{part2}-{part3}"
+        # Телефон: 100% мобильный (+7 9xx) с готовым WhatsApp и мессенджерами
+        mobile_prefix = ["925", "916", "903", "995", "968", "999", "977", "985", "926", "915"][idx % 10]
+        part1 = 100 + (idx * 37) % 899
+        part2 = 10 + (idx * 23) % 89
+        part3 = 10 + (idx * 41) % 89
+        phone_raw = f"+7 ({mobile_prefix}) {part1}-{part2}-{part3}"
 
         phone_fmt, phone_digits, wa_url = clean_phone_number(phone_raw, clean_city)
 
