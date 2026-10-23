@@ -22,21 +22,6 @@ from miniapp.pitch_generator import generate_pitch, calculate_business_roi, get_
 from miniapp.rpc_handler import handle_rpc_call
 
 STATIC_DIR = Path(__file__).parent / "static"
-_INDEX_RAW: Optional[bytes] = None
-_INDEX_GZIP: Optional[bytes] = None
-
-
-def get_cached_index_data():
-    """Кэширует index.html в оперативной памяти (включая gzip 46КБ) для моментальной отдачи."""
-    global _INDEX_RAW, _INDEX_GZIP
-    if _INDEX_RAW is None:
-        index_file = STATIC_DIR / "index.html"
-        if index_file.exists():
-            _INDEX_RAW = index_file.read_bytes()
-        else:
-            _INDEX_RAW = b"index.html not found"
-        _INDEX_GZIP = gzip.compress(_INDEX_RAW, compresslevel=6)
-    return _INDEX_RAW, _INDEX_GZIP
 
 
 def verify_telegram_init_data(init_data: str, bot_token: str) -> Optional[dict]:
@@ -95,26 +80,10 @@ async def handle_ping(request: web.Request) -> web.Response:
 
 
 async def handle_index(request: web.Request) -> web.Response:
-    raw, gz = get_cached_index_data()
-    accept_enc = request.headers.get("Accept-Encoding", "")
-    if "gzip" in accept_enc:
-        return web.Response(
-            body=gz,
-            content_type="text/html",
-            charset="utf-8",
-            headers={
-                "Content-Encoding": "gzip",
-                "Cache-Control": "no-cache, must-revalidate",
-            }
-        )
-    return web.Response(
-        body=raw,
-        content_type="text/html",
-        charset="utf-8",
-        headers={
-            "Cache-Control": "no-cache, must-revalidate",
-        }
-    )
+    index_file = STATIC_DIR / "index.html"
+    if not index_file.exists():
+        return web.Response(text="index.html not found", status=404)
+    return web.FileResponse(index_file)
 
 
 
