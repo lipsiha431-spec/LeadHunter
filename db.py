@@ -85,6 +85,7 @@ async def init_db() -> None:
             ("notifications_enabled", "INTEGER", 1),
             ("leads_received", "INTEGER", 0),
             ("active_categories", "TEXT", "''"),
+            ("trial_used", "INTEGER", 0),
         ]:
             try:
                 await conn.execute(
@@ -147,17 +148,18 @@ async def init_db() -> None:
 async def add_user(user_id: int) -> bool:
     """
     Добавляет нового пользователя в БД.
-    Новым клиентам автоматически выдается БЕСПЛАТНЫЙ ТРИАЛ PRO на 5 дней (120 часов).
+    Новым клиентам автоматически выдается БЕСПЛАТНЫЙ ТРИАЛ PRO на 3 дня (72 часа).
+    Фиксируется trial_used = 1 для предотвращения повторного использования.
     Возвращает True, если пользователь зарегистрирован впервые.
     """
-    # 5 дней (120 часов) бесплатного пробного периода
-    trial_until = (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d %H:%M:%S")
+    # 3 дня (72 часа) бесплатного пробного периода
+    trial_until = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S")
 
     async with get_connection() as conn:
         cursor = await conn.execute(
             """
-            INSERT OR IGNORE INTO users (user_id, keywords, stop_words, is_pro, pro_until, notifications_enabled, leads_received, active_categories)
-            VALUES (?, ?, ?, 1, ?, 1, 0, '')
+            INSERT OR IGNORE INTO users (user_id, keywords, stop_words, is_pro, pro_until, notifications_enabled, leads_received, active_categories, trial_used)
+            VALUES (?, ?, ?, 1, ?, 1, 0, '', 1)
             """,
             (user_id, "", DEFAULT_STOP_WORDS, trial_until),
         )
@@ -173,7 +175,8 @@ async def get_user(user_id: int) -> Optional[dict[str, Any]]:
             SELECT user_id, keywords, stop_words, is_pro, pro_until,
                    COALESCE(notifications_enabled, 1) as notifications_enabled,
                    COALESCE(leads_received, 0) as leads_received,
-                   COALESCE(active_categories, '') as active_categories
+                   COALESCE(active_categories, '') as active_categories,
+                   COALESCE(trial_used, 0) as trial_used
             FROM users WHERE user_id = ?
             """,
             (user_id,),
@@ -400,6 +403,15 @@ async def get_all_users_with_keywords() -> list[dict[str, Any]]:
                 if is_admin(item.get("user_id")):
                     item["is_pro"] = 1
                     item["pro_until"] = "2099-12-31 23:59:59"
+                elif item.get("is_pro") == 1 and item.get("pro_until"):
+                    try:
+                        expiry = datetime.fromisoformat(item["pro_until"])
+                        if datetime.now() > expiry:
+                            item["is_pro"] = 0
+                            await conn.execute("UPDATE users SET is_pro = 0 WHERE user_id = ?", (item["user_id"],))
+                            await conn.commit()
+                    except Exception:
+                        pass
                 results.append(item)
             return results
 
@@ -808,3 +820,57 @@ async def update_user_profile(
         await conn.commit()
 
 
+
+
+async def has_used_trial(user_id: Optional[int]) -> bool:
+    """Проверяет, использовал ли пользователь бесплатный пробный период."""
+    if not user_id:
+        return False
+    if is_admin(user_id):
+        return False
+    user = await get_user(user_id)
+    if not user:
+        return False
+    return bool(user.get("trial_used", 0))
+
+
+async def activate_free_trial(user_id: int, days: int = 3) -> tuple[bool, str]:
+    """
+    Активирует бесплатный пробный период PRO на 3 дня.
+    Защита от абуза: выдается строго 1 раз на аккаунт.
+    Returns: (success, message_or_expiry)
+    """
+    if is_admin(user_id):
+        readable = await give_pro_days(user_id, days=days)
+        return True, readable
+
+    user = await get_user(user_id)
+    if not user:
+        await add_user(user_id)
+        user = await get_user(user_id)
+
+    # Защита от абуза №1: проверка флага trial_used
+    if user.get("trial_used"):
+        return False, "already_used"
+
+    # Защита от абуза №2: проверка уже активного PRO
+    if user.get("is_pro") == 1:
+        return False, "already_active"
+
+    # Начисляем ровно 3 дня и навсегда фиксируем trial_used = 1
+    new_expiry = datetime.now() + timedelta(days=days)
+    pro_until_str = new_expiry.strftime("%Y-%m-%d %H:%M:%S")
+    readable_until = f"до {new_expiry.strftime('%d.%m.%Y %H:%M')} (💎 PRO)"
+
+    async with get_connection() as conn:
+        await conn.execute(
+            """
+            UPDATE users 
+            SET is_pro = 1, pro_until = ?, trial_used = 1 
+            WHERE user_id = ?
+            """,
+            (pro_until_str, user_id),
+        )
+        await conn.commit()
+
+    return True, readable_until

@@ -313,26 +313,34 @@ def get_cluster_details_keyboard(cluster_id: str, user_active_cats: set[str]) ->
 
 # --- Клавиатуры раздела оплаты ---
 
-async def get_payment_plans_keyboard() -> InlineKeyboardMarkup:
-    """Выбор тарифа подписки."""
+async def get_payment_plans_keyboard(user_id: Optional[int] = None) -> InlineKeyboardMarkup:
+    """Выбор тарифа подписки с динамической защитой от повторного взятия триала."""
     p3 = await get_plan_price(3)
     p30 = await get_plan_price(30)
     plife = await get_plan_price(999)
-    trial_label = "🎁 3 дня (Пробный) — БЕСПЛАТНО" if p3 == 0 else f"⚡️ 3 дня (Пробный) — {p3} ₽"
-    keyboard = [
-        [
-            InlineKeyboardButton(text=trial_label, callback_data=f"plan:3:{p3}"),
-        ],
-        [
-            InlineKeyboardButton(text=f"💎 Месяц: 30 дней — {p30} ₽", callback_data=f"plan:30:{p30}"),
-        ],
-        [
-            InlineKeyboardButton(text=f"👑 Безлимит: Навсегда — {plife} ₽", callback_data=f"plan:999:{plife}"),
-        ],
-        [
-            InlineKeyboardButton(text="🏠 В главное меню", callback_data="btn_main_menu"),
-        ],
-    ]
+
+    trial_used = await db.has_used_trial(user_id) if user_id else False
+
+    keyboard = []
+    if not trial_used:
+        trial_label = "🎁 3 дня (Пробный) — БЕСПЛАТНО" if p3 == 0 else f"⚡️ 3 дня (Пробный) — {p3} ₽"
+        keyboard.append([
+            InlineKeyboardButton(text=trial_label, callback_data=f"plan:3:{p3}")
+        ])
+    else:
+        keyboard.append([
+            InlineKeyboardButton(text="⚡️ 3 дня (Пробный) — [Использован]", callback_data="trial_already_used")
+        ])
+
+    keyboard.append([
+        InlineKeyboardButton(text=f"💎 Месяц: 30 дней — {p30} ₽", callback_data=f"plan:30:{p30}"),
+    ])
+    keyboard.append([
+        InlineKeyboardButton(text=f"👑 Безлимит: Навсегда — {plife} ₽", callback_data=f"plan:999:{plife}"),
+    ])
+    keyboard.append([
+        InlineKeyboardButton(text="🏠 В главное меню", callback_data="btn_main_menu"),
+    ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
@@ -727,7 +735,7 @@ async def nav_pro(message: Message, state: FSMContext) -> None:
         "› <i>Доступны СБП, банковские карты РФ, Криптовалюта (USDT, TON) и Telegram Stars.</i>\n\n"
         "› <b>Выберите срок действия:</b>"
     )
-    await message.answer(text, reply_markup=await get_payment_plans_keyboard(), parse_mode="HTML")
+    await message.answer(text, reply_markup=await get_payment_plans_keyboard(message.from_user.id), parse_mode="HTML")
 
 
 # ==========================================
@@ -756,8 +764,17 @@ async def cb_pay_plans(callback: CallbackQuery, state: FSMContext) -> None:
         "<i>Доступны СБП, банковские карты РФ, Криптовалюта (USDT, TON) и Telegram Stars.</i>\n\n"
         "👇 <b>Выберите срок действия подписки:</b>"
     )
-    await callback.message.edit_text(text, reply_markup=await get_payment_plans_keyboard(), parse_mode="HTML")
+    await callback.message.edit_text(text, reply_markup=await get_payment_plans_keyboard(callback.from_user.id), parse_mode="HTML")
     await callback.answer()
+
+
+@router.callback_query(F.data == "trial_already_used")
+async def cb_trial_already_used(callback: CallbackQuery) -> None:
+    await callback.answer(
+        "⚠️ Вы уже использовали бесплатный пробный период на этом аккаунте.\n\n"
+        "Для продолжения работы выберите тариф «Месяц» или «Безлимит».",
+        show_alert=True
+    )
 
 
 @router.callback_query(F.data.startswith("plan:"))
@@ -768,13 +785,24 @@ async def cb_choose_plan(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id
 
     if days == 3 or price == 0:
-        user = await db.get_user(user_id)
-        if user and user.get("is_pro") == 1 and not db.is_admin(user_id):
-            pro_status = await db.get_pro_status_display(user)
-            await callback.answer(f"У вас уже активен PRO статус ({pro_status})!", show_alert=True)
+        ok, res = await db.activate_free_trial(user_id, days=3)
+        if not ok:
+            if res == "already_used":
+                await callback.answer(
+                    "⚠️ Бесплатный пробный период уже был использован на этом аккаунте!\n\n"
+                    "Для продолжения выберите тариф «Месяц» или «Безлимит».",
+                    show_alert=True
+                )
+                await callback.message.edit_reply_markup(
+                    reply_markup=await get_payment_plans_keyboard(user_id)
+                )
+            elif res == "already_active":
+                user = await db.get_user(user_id)
+                pro_status = await db.get_pro_status_display(user)
+                await callback.answer(f"У вас уже активен PRO статус ({pro_status})!", show_alert=True)
             return
 
-        readable_until = await db.give_pro_days(user_id, days=3)
+        readable_until = res
         user = await db.get_user(user_id)
         pro_status = await db.get_pro_status_display(user)
 
@@ -2812,17 +2840,22 @@ async def cmd_set_sbp(message: Message) -> None:
 @router.message(Command("trial"))
 async def cmd_free_trial(message: Message) -> None:
     user_id = message.from_user.id
-    user = await db.get_user(user_id)
-    if not user:
-        await db.add_user(user_id)
-        user = await db.get_user(user_id)
-
-    if user and user.get("is_pro") == 1 and not db.is_admin(user_id):
-        pro_status = await db.get_pro_status_display(user)
-        await message.answer(f"💎 У вас уже активен PRO статус: {pro_status}")
+    ok, res = await db.activate_free_trial(user_id, days=3)
+    if not ok:
+        if res == "already_used":
+            await message.answer(
+                "⚠️ <b>Бесплатный пробный период уже был использован на вашем аккаунте.</b>\n\n"
+                "Для продолжения оформите подписку PRO на месяц (490 ₽) или навсегда (1 490 ₽) в меню тарифов /pro.",
+                reply_markup=await get_payment_plans_keyboard(user_id),
+                parse_mode="HTML"
+            )
+        elif res == "already_active":
+            user = await db.get_user(user_id)
+            pro_status = await db.get_pro_status_display(user)
+            await message.answer(f"💎 У вас уже активен PRO статус: {pro_status}")
         return
 
-    readable_until = await db.give_pro_days(user_id, days=3)
+    readable_until = res
     user = await db.get_user(user_id)
     pro_status = await db.get_pro_status_display(user)
 
