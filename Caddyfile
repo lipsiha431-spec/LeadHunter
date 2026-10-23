@@ -1,0 +1,15 @@
+# Caddyfile — Автоматический HTTPS сервер с авто-выпуском SSL сертификатов Let's Encrypt
+# Замените your-domain.com на ваш реальный домен (например, app.leadhunter.ru)
+
+# your-domain.com {
+#     # Проксирование всех запросов в Mini App
+#     reverse_proxy leadhunter:8080 {
+#         header_up Host {host}
+#         header_up X-Real-IP {remote_host}
+#         header_up X-Forwarded-For {remote_host}
+#         header_up X-Forwarded-Proto https
+#     }
+#
+#     # Сжатие gzip и zstd
+#     encode gzip zstd
+# }

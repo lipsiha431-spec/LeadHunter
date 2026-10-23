@@ -1,0 +1,19 @@
+[Unit]
+Description=LeadHunter B2B — Telegram Bot & Mini App
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/leadhunter
+ExecStart=/opt/leadhunter/venv/bin/python main.py
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=15
+LimitNOFILE=65535
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONIOENCODING=utf-8
+
+[Install]
+WantedBy=multi-user.target

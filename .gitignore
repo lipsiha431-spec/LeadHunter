@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment and sensitive secrets
+.env
+ApiTokens.env
+
+# Telethon sessions & SQLite local databases
+*.session
+*.session-journal
+*.db
+*.db-wal
+*.db-shm
+
+# Binaries & tunnels
+cloudflared
+cloudflared.exe
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

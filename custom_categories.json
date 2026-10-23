@@ -1,0 +1,12 @@
+{
+  "extra_clusters": [],
+  "extra_categories": [],
+  "extra_keywords": {
+    "it_bots": []
+  },
+  "deleted_keywords": {
+    "it_bots": [
+      "тестовый_бот_123"
+    ]
+  }
+}

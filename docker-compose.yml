@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  leadhunter:
+    build: .
+    container_name: leadhunter_b2b
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      # Сохранение базы данных SQLite и сессий Telethon между перезапусками
+      - ./leads.db:/app/leads.db
+      - ./lead_parser_session.session:/app/lead_parser_session.session
+      - ./chats_list.txt:/app/chats_list.txt
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=utf-8
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # Опциональный автоматический SSL веб-сервер Caddy (раскомментируйте, если есть свой домен)
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: leadhunter_caddy
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - leadhunter
+
+# volumes:
+#   caddy_data:
+#   caddy_config:
