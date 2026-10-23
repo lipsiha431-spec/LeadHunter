@@ -530,6 +530,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 
 # --- B2B Mini App Handler ---
 @router.message(Command("app"))
+@router.message(Command("miniapp"))
 @router.message(F.text.in_(["⚡️ B2B Поиск клиентов (App)", "[▸] B2B Поиск клиентов (App)", "Поиск B2B клиентов (App)", "🚀 Поиск B2B клиентов (App)"]))
 @router.callback_query(F.data == "btn_open_miniapp")
 async def show_miniapp_info(event: Message | CallbackQuery) -> None:

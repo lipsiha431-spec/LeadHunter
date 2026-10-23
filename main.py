@@ -174,10 +174,11 @@ async def main() -> None:
                 asyncio.create_task(apply_tunnel_url(url))
 
             # Если в конфигурации уже задан постоянный продакшн HTTPS URL (домен сервера)
+            is_tunnel_domain = any(dom in (config.MINI_APP_URL or "") for dom in ["lhr.life", "serveousercontent.com", "trycloudflare.com", "pinggy.link"])
             has_prod_url = (
                 config.MINI_APP_URL
                 and config.MINI_APP_URL.startswith("https://")
-                and "lhr.life" not in config.MINI_APP_URL
+                and not is_tunnel_domain
             )
 
             if has_prod_url:

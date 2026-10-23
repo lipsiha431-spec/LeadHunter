@@ -21,6 +21,19 @@ from miniapp.pitch_generator import generate_pitch, calculate_business_roi, get_
 from miniapp.rpc_handler import handle_rpc_call
 
 STATIC_DIR = Path(__file__).parent / "static"
+_INDEX_CACHE: Optional[bytes] = None
+
+
+def get_cached_index() -> bytes:
+    """Кэширует index.html в оперативной памяти для мгновенной отдачи (<0.01с)."""
+    global _INDEX_CACHE
+    if _INDEX_CACHE is None:
+        index_file = STATIC_DIR / "index.html"
+        if index_file.exists():
+            _INDEX_CACHE = index_file.read_bytes()
+        else:
+            _INDEX_CACHE = b"index.html not found"
+    return _INDEX_CACHE
 
 
 def verify_telegram_init_data(init_data: str, bot_token: str) -> Optional[dict]:
@@ -72,11 +85,22 @@ async def cors_middleware(request, handler):
 
 # --- Handlers ---
 
+async def handle_ping(request: web.Request) -> web.Response:
+    """Ультралегкий эндпоинт для мгновенной проверки работоспособности туннеля."""
+    return web.Response(text="pong", content_type="text/plain")
+
+
 async def handle_index(request: web.Request) -> web.Response:
-    index_file = STATIC_DIR / "index.html"
-    if not index_file.exists():
-        return web.Response(text="index.html not found", status=404)
-    return web.FileResponse(index_file)
+    content = get_cached_index()
+    return web.Response(
+        body=content,
+        content_type="text/html",
+        charset="utf-8",
+        headers={
+            "Cache-Control": "no-cache, must-revalidate",
+        }
+    )
+
 
 
 async def handle_bg_js(request: web.Request) -> web.Response:
@@ -325,6 +349,8 @@ async def handle_profile_post(request: web.Request) -> web.Response:
 
 def create_app() -> web.Application:
     app = web.Application(middlewares=[cors_middleware])
+    app.router.add_get("/ping", handle_ping)
+    app.router.add_get("/health", handle_ping)
     app.router.add_get("/", handle_index)
     app.router.add_get("/index.html", handle_index)
     app.router.add_get("/bg.js", handle_bg_js)
