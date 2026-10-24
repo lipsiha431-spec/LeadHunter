@@ -198,8 +198,16 @@ async def main() -> None:
             if has_prod_url:
                 try:
                     await bot_instance.set_chat_menu_button(
-                        menu_button=MenuButtonWebApp(text="[▸] Mini App", web_app=WebAppInfo(url=config.MINI_APP_URL))
+                        menu_button=MenuButtonWebApp(text="🚀 LeadHunter App", web_app=WebAppInfo(url=config.MINI_APP_URL))
                     )
+                    if config.ADMIN_ID:
+                        try:
+                            await bot_instance.set_chat_menu_button(
+                                chat_id=config.ADMIN_ID,
+                                menu_button=MenuButtonWebApp(text="🚀 LeadHunter App", web_app=WebAppInfo(url=config.MINI_APP_URL))
+                            )
+                        except Exception:
+                            pass
                     logger.info("Используется постоянный URL Mini App: %s", config.MINI_APP_URL)
                 except Exception as btn_err:
                     logger.warning("Не удалось установить chat menu button: %s", btn_err)
