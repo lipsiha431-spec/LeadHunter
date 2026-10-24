@@ -51,7 +51,7 @@ PAY_CRYPTO_TON: str = os.getenv("PAY_CRYPTO_TON", "UQYourTonWalletAddressHerexxx
 ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "paniicca")
 
 # --- Настройки Telegram Mini App (B2B Lead Generator) ---
-MINI_APP_PORT: int = _get_int("MINI_APP_PORT", 8080)
+MINI_APP_PORT: int = _get_int("PORT", _get_int("MINI_APP_PORT", 8080))
 MINI_APP_HOST: str = os.getenv("MINI_APP_HOST", "0.0.0.0")
 MINI_APP_URL: str = os.getenv("MINI_APP_URL", "")
 GOOGLE_PLACES_API_KEY: str = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()

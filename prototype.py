@@ -25,9 +25,9 @@ if sys.platform == "win32":
 # ==========================================
 # 🔑 НАСТРОЙКИ АВТОРИЗАЦИИ TELEGRAM
 # ==========================================
-API_ID = 30968277
-API_HASH = "2e621b790f02875a3ea72b245a909551"
-SESSION_NAME = "lead_hunter_session"
+API_ID = int(os.getenv("API_ID", 0))
+API_HASH = os.getenv("API_HASH", "")
+SESSION_NAME = os.getenv("SESSION_NAME", "lead_hunter_session")
 CSV_FILE = "leads_history.csv"
 
 # ==========================================
