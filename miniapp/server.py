@@ -334,6 +334,14 @@ async def handle_profile_post(request: web.Request) -> web.Response:
 
 def create_app() -> web.Application:
     app = web.Application(middlewares=[cors_middleware])
+
+    async def on_startup(app_instance):
+        try:
+            await db.init_db()
+        except Exception as e:
+            logger.warning("DB init on startup warning: %s", e)
+
+    app.on_startup.append(on_startup)
     app.router.add_get("/ping", handle_ping)
     app.router.add_get("/health", handle_ping)
     app.router.add_get("/", handle_index)

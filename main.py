@@ -131,23 +131,32 @@ async def main() -> None:
     async def run_telethon():
         if not client:
             return
+        session_file = f"{config.SESSION_NAME}.session"
+        if not os.path.exists(session_file):
+            logger.info("Файл сессии Telethon (%s) не найден. Парсер чатов отключен (Mini App и бот активны).", session_file)
+            while True:
+                await asyncio.sleep(3600)
         while True:
             try:
                 logger.info("Подключение Telethon к чатам Telegram...")
                 await client.connect()
                 if not await client.is_user_authorized():
                     logger.warning("[!] Telethon: сессия не авторизована. Требуется auth_session.py")
-                    await asyncio.sleep(30)
+                    try:
+                        await client.disconnect()
+                    except Exception:
+                        pass
+                    await asyncio.sleep(3600)
                     continue
                 logger.info("[OK] Telethon подключен к чатам.")
                 await client.run_until_disconnected()
             except Exception as e:
-                logger.warning("[!] Telethon ожидает стабильной связи: %s (повтор через 15 сек)", e)
+                logger.warning("[!] Telethon ожидает стабильной связи: %s (повтор через 60 сек)", e)
                 try:
                     await client.disconnect()
                 except Exception:
                     pass
-                await asyncio.sleep(15)
+                await asyncio.sleep(60)
 
     # Функция запуска веб-сервера Telegram Mini App (B2B Лидогенератор)
     async def run_miniapp():

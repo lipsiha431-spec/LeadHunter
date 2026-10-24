@@ -113,6 +113,8 @@ async def init_db() -> None:
                 user_id INTEGER,
                 place_id TEXT,
                 name TEXT,
+                city TEXT DEFAULT 'Москва',
+                category TEXT DEFAULT '',
                 address TEXT,
                 phone TEXT,
                 website TEXT,
@@ -121,6 +123,7 @@ async def init_db() -> None:
                 stage TEXT DEFAULT 'new',
                 notes TEXT DEFAULT '',
                 pitch TEXT DEFAULT '',
+                draft TEXT DEFAULT '',
                 rating REAL DEFAULT 0,
                 user_ratings_total INTEGER DEFAULT 0,
                 created_at TEXT,
@@ -129,6 +132,20 @@ async def init_db() -> None:
             )
             """
         )
+
+        # Безопасная миграция колонок для b2b_leads
+        for col, col_type, default_val in [
+            ("city", "TEXT", "'Москва'"),
+            ("category", "TEXT", "''"),
+            ("draft", "TEXT", "''"),
+        ]:
+            try:
+                await conn.execute(
+                    f"ALTER TABLE b2b_leads ADD COLUMN {col} {col_type} DEFAULT {default_val}"
+                )
+                await conn.commit()
+            except Exception:
+                pass
 
         # Таблица профиля фрилансера в Mini App
         await conn.execute(
