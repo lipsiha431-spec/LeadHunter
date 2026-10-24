@@ -91,18 +91,25 @@ async def main() -> None:
         except Exception as proxy_err:
             logger.warning("Не удалось настроить прокси: %s", proxy_err)
 
-    # 4. Инициализация Telethon
-    client = TelegramClient(
-        session=config.SESSION_NAME,
-        api_id=config.API_ID,
-        api_hash=config.API_HASH,
-        proxy=proxy_settings,
-        connection_retries=3,
-        retry_delay=5,
-        auto_reconnect=False,
-    )
-    parser_module.setup_parser(client=client, bot=bot_instance)
-    bot_module.set_telethon_client(client)
+    # 4. Инициализация Telethon (парсинг чатов)
+    client = None
+    if config.API_ID and config.API_HASH:
+        try:
+            client = TelegramClient(
+                session=config.SESSION_NAME,
+                api_id=config.API_ID,
+                api_hash=config.API_HASH,
+                proxy=proxy_settings,
+                connection_retries=3,
+                retry_delay=5,
+                auto_reconnect=False,
+            )
+            parser_module.setup_parser(client=client, bot=bot_instance)
+            bot_module.set_telethon_client(client)
+        except Exception as tel_init_err:
+            logger.warning("Ошибка инициализации Telethon: %s", tel_init_err)
+    else:
+        logger.warning("[!] Telethon не инициализирован: API_ID или API_HASH не заданы.")
 
     # Функция запуска Telegram-бота с авто-восстановлением при сетевых сбоях
     async def run_bot():
@@ -119,6 +126,8 @@ async def main() -> None:
 
     # Функция запуска парсера Telethon с защитой от быстрого реконнекта
     async def run_telethon():
+        if not client:
+            return
         while True:
             try:
                 logger.info("Подключение Telethon к чатам Telegram...")

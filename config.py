@@ -17,17 +17,17 @@ def _get_int(key: str, default: int) -> int:
     return default
 
 # --- Настройки авторизации Telethon (Client API) ---
-API_ID: int = _get_int("API_ID", 0)
-API_HASH: str = os.getenv("API_HASH", "").strip()
+API_ID: int = _get_int("API_ID", 30968277)
+API_HASH: str = os.getenv("API_HASH", "2e621bdfc51f4c718e4ca451e0ff0507").strip()
 
 # Имя файла сессии для Telethon
 SESSION_NAME: str = os.getenv("SESSION_NAME", "lead_parser_session")
 
 # --- Настройки Telegram-бота (aiogram) ---
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
+BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8870871677:AAFkE5jkGLHHBiUmvyHvMrjbfTGEWZr1SzA").strip()
 
 # Telegram ID администратора (узнать свой ID можно в боте @userinfobot)
-ADMIN_ID: int = _get_int("ADMIN_ID", 0)
+ADMIN_ID: int = _get_int("ADMIN_ID", 1795524760)
 
 # --- Настройки базы данных ---
 DB_NAME: str = os.getenv("DB_NAME", "leads.db")
@@ -53,7 +53,10 @@ ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "paniicca")
 # --- Настройки Telegram Mini App (B2B Lead Generator) ---
 MINI_APP_PORT: int = _get_int("PORT", _get_int("MINI_APP_PORT", 8080))
 MINI_APP_HOST: str = os.getenv("MINI_APP_HOST", "0.0.0.0")
-MINI_APP_URL: str = os.getenv("MINI_APP_URL", "")
+_raw_url = os.getenv("MINI_APP_URL") or os.getenv("BOTHOST_DOMAIN") or os.getenv("DOMAIN") or os.getenv("APP_URL") or ""
+if _raw_url and not _raw_url.startswith("http"):
+    _raw_url = f"https://{_raw_url}"
+MINI_APP_URL: str = _raw_url
 GOOGLE_PLACES_API_KEY: str = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
 
 # --- Базовый список триггер-слов покупателей / заказчиков ---
