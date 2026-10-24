@@ -53,7 +53,7 @@ ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "paniicca")
 # --- Настройки Telegram Mini App (B2B Lead Generator) ---
 MINI_APP_PORT: int = _get_int("PORT", _get_int("MINI_APP_PORT", 8080))
 MINI_APP_HOST: str = os.getenv("MINI_APP_HOST", "0.0.0.0")
-_raw_url = os.getenv("MINI_APP_URL") or os.getenv("BOTHOST_DOMAIN") or os.getenv("DOMAIN") or os.getenv("APP_URL") or ""
+_raw_url = os.getenv("MINI_APP_URL") or os.getenv("BOTHOST_DOMAIN") or os.getenv("DOMAIN") or os.getenv("APP_URL") or "https://leadhunter.bothost.tech"
 if _raw_url and not _raw_url.startswith("http"):
     _raw_url = f"https://{_raw_url}"
 MINI_APP_URL: str = _raw_url

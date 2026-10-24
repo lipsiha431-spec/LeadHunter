@@ -48,8 +48,11 @@ async def main() -> None:
     await db.init_db()
     logger.info("База данных SQLite подключена.")
 
-    # 2. Инициализация бота aiogram 3.x с IPv4
-    session = IPv4AiohttpSession()
+    # 2. Инициализация бота aiogram 3.x
+    if sys.platform == "win32":
+        session = IPv4AiohttpSession()
+    else:
+        session = AiohttpSession()
     bot_instance = Bot(
         token=config.BOT_TOKEN,
         session=session,
