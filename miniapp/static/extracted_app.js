@@ -104,7 +104,16 @@ const leaving = () => document.visibilityState === 'hidden';
 async function httpApi(url, op, args){
   let r;
   const ms = waitMs(op, args), ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms);
-  const body = JSON.stringify({ initData: tg ? tg.initData : '', op, args: args || {} });
+  let clientUid = 0;
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+      clientUid = Number(tg.initDataUnsafe.user.id);
+    } else {
+      const qp = new URLSearchParams(window.location.search).get('user_id');
+      if (qp && !isNaN(Number(qp))) clientUid = Number(qp);
+    }
+  } catch {}
+  const body = JSON.stringify({ initData: tg ? tg.initData : '', user_id: clientUid, op, args: args || {} });
   try { r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body, signal: ctl.signal, keepalive: leaving() && body.length < 60000 }); }
   catch {
     const e = reopenErr(ctl.signal.aborted ? `Программа не ответила за ${ms > 60000 ? '2,5 минуты' : '35 секунд'}. Компьютер мог уснуть или программа занята.` : 'Нет связи с программой: компьютер выключен или уснул, программа закрыта — или она перезапускалась и адрес приложения сменился.');

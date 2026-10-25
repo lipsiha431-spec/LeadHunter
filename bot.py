@@ -536,6 +536,9 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 async def show_miniapp_info(event: Message | CallbackQuery) -> None:
     message = event if isinstance(event, Message) else event.message
     app_url = getattr(config, "MINI_APP_URL", "")
+    from_user = event.from_user
+    uid = from_user.id if from_user else 0
+    browser_url = f"{app_url}?user_id={uid}" if (app_url.startswith("https://") and uid) else app_url
 
     text = (
         "⚡️ <b>LeadHunter B2B — Поиск заведений без сайта</b>\n"
@@ -553,12 +556,12 @@ async def show_miniapp_info(event: Message | CallbackQuery) -> None:
     if app_url.startswith("https://"):
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="⚡️ Запустить LeadHunter B2B", web_app=WebAppInfo(url=app_url))],
-            [InlineKeyboardButton(text="🌐 Открыть в обычном браузере", url=app_url)],
+            [InlineKeyboardButton(text="🌐 Открыть в обычном браузере", url=browser_url)],
             [InlineKeyboardButton(text="🏠 Главное меню", callback_data="btn_main_menu")],
         ])
     else:
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🌐 Открыть LeadHunter B2B", url=app_url)],
+            [InlineKeyboardButton(text="🌐 Открыть LeadHunter B2B", url=browser_url)],
             [InlineKeyboardButton(text="🏠 Главное меню", callback_data="btn_main_menu")],
         ])
 
