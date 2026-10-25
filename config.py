@@ -17,14 +17,14 @@ def _get_int(key: str, default: int) -> int:
     return default
 
 # --- Настройки авторизации Telethon (Client API) ---
-API_ID: int = _get_int("API_ID", 30968277)
-API_HASH: str = os.getenv("API_HASH", "2e621bdfc51f4c718e4ca451e0ff0507").strip()
+API_ID: int = _get_int("API_ID", 0)
+API_HASH: str = os.getenv("API_HASH", "").strip()
 
 # Имя файла сессии для Telethon
 SESSION_NAME: str = os.getenv("SESSION_NAME", "lead_parser_session")
 
 # --- Настройки Telegram-бота (aiogram) ---
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "8870871677:AAFkE5jkGLHHBiUmvyHvMrjbfTGEWZr1SzA").strip()
+BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
 
 # Telegram ID администратора (узнать свой ID можно в боте @userinfobot)
 ADMIN_ID: int = _get_int("ADMIN_ID", 1795524760)
