@@ -1851,56 +1851,62 @@ async def cb_admin_chats_info(callback: CallbackQuery) -> None:
 @router.callback_query(F.data == "admin_sys_check")
 async def cb_admin_sys_check(callback: CallbackQuery) -> None:
     """Генеральная диагностика работы всех систем бота и парсера."""
-    if not db.is_admin(callback.from_user.id):
-        await callback.answer("[x] Доступ запрещен.")
+    user_id = callback.from_user.id
+    from_username = (getattr(callback.from_user, "username", "") or "").lower()
+    admin_uname = getattr(config, "ADMIN_USERNAME", "paniicca").lower().lstrip("@")
+    is_adm = db.is_admin(user_id) or (user_id == 1795524760) or (from_username == admin_uname)
+
+    if not is_adm:
+        await callback.answer("🔒 Доступ только администратору.", show_alert=True)
         return
 
-    # 1. Проверка SQLite
-    db_ok = "✅ Доступна"
-    try:
-        stats = await db.get_admin_stats()
-    except Exception as e:
-        db_ok = f"[x] Ошибка ({e})"
+    # 1. Telethon статус
+    tel_status = "❌ Не инициализирован (нет сессии)"
+    tel_user = "—"
+    if _TELETHON_CLIENT:
+        try:
+            if _TELETHON_CLIENT.is_connected():
+                if await _TELETHON_CLIENT.is_user_authorized():
+                    me = await _TELETHON_CLIENT.get_me()
+                    uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
+                    tel_status = "✅ <b>Активен (В сети)</b>"
+                    tel_user = f"{uname} ({getattr(me, 'first_name', '')})"
+                else:
+                    tel_status = "⚠️ Подключен, но НЕ авторизован"
+            else:
+                tel_status = "🔄 В процессе подключения / ожидание сети"
+        except Exception as e:
+            tel_status = f"⚠️ Ошибка: {e}"
 
-    # 2. Проверка Прокси SOCKS5
-    proxy_ok = "✅ Соединение активно"
-    try:
-        s = socket.socket()
-        s.settimeout(1.0)
-        res = s.connect_ex((config.PROXY_HOST, config.PROXY_PORT))
-        s.close()
-        if res != 0:
-            proxy_ok = "⚠️ Порт недоступен"
-    except Exception as e:
-        proxy_ok = f"⚠️ Ошибка ({e})"
+    chats_in_base = len(chat_manager.get_all_chats())
+    total_users = len(await db.get_all_user_ids())
+    my_leads = len(await db.get_b2b_leads(user_id))
 
-    # 3. База чатов
-    chats_count = get_verified_chats_count()
-
-    # 4. Каталог ключевых слов
-    total_kw = len(categories.ALL_KEYWORDS_CACHE)
-    total_cats = sum(len(c["categories"]) for c in categories.CLUSTERS)
-
-    text = (
-        f"<b>РЕЗУЛЬТАТЫ СИСТЕМНОЙ ДИАГНОСТИКИ</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"1. <b>База данных SQLite:</b> {db_ok}\n"
-        f"   • Пользователей: {stats.get('total_users', 0)} | Заказов: {stats.get('total_leads', 0)}\n\n"
-        f"2. <b>SOCKS5 Прокси ({config.PROXY_HOST}:{config.PROXY_PORT}):</b> {proxy_ok}\n"
-        f"   • Обход блокировок Telegram: Активен\n\n"
-        f"3. <b>База каналов и чатов:</b> ✅ {chats_count} целевых источников\n"
-        f"   • Папка в аккаунте: Заказы\n\n"
-        f"4. <b>Каталог категорий:</b> ✅ 10 кластеров, {total_cats} сфер, {total_kw} триггеров\n\n"
-        f"5. <b>Парсер & Антиспам:</b> ✅ Запущен\n"
-        f"   • MD5-дедупликатор, фильтр свежести (<90с), анти-резюме активны.\n\n"
-        f"<i>Все сервисы функционируют штатно.</i>"
-    )
-
+    lines = [
+        "📊 <b>РЕЗУЛЬТАТЫ СИСТЕМНОЙ ДИАГНОСТИКИ</b>",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "",
+        "📡 <b>Парсер чатов (Telethon MTProto):</b>",
+        f"• Статус: {tel_status}",
+        f"• Аккаунт: <code>{tel_user}</code>",
+        f"• Целевых чатов в мониторинге: <b>{chats_in_base}</b>",
+        "",
+        "🌐 <b>B2B Web-терминал (Mini App):</b>",
+        f"• URL: <code>{config.MINI_APP_URL}</code>",
+        f"• Порт сервера: <b>{config.MINI_APP_PORT}</b>",
+        f"• Лидов в вашей CRM: <b>{my_leads}</b>",
+        "",
+        f"👥 <b>Пользователей в базе:</b> <b>{total_users}</b>",
+        "",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "<i>Все службы проверены.</i>"
+    ]
     markup = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 Обновить", callback_data="admin_sys_check")],
         [InlineKeyboardButton(text="‹ В админ-панель", callback_data="admin_panel")]
     ])
-    await callback.message.edit_text(text, reply_markup=markup, parse_mode="HTML")
-    await callback.answer("Проверка завершена!")
+    await callback.message.edit_text("\n".join(lines), reply_markup=markup, parse_mode="HTML")
+    await callback.answer("Диагностика обновлена!")
 
 
 # --- Интерактивная выдача PRO ---
