@@ -98,7 +98,11 @@ async def handle_index(request: web.Request) -> web.Response:
     index_file = STATIC_DIR / "index.html"
     if not index_file.exists():
         return web.Response(text="index.html not found", status=404)
-    return web.FileResponse(index_file)
+    response = web.FileResponse(index_file)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 

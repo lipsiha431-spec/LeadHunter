@@ -661,7 +661,16 @@ const leaving = () => document.visibilityState === 'hidden';
 async function httpApi(url, op, args){
   let r;
   const ms = waitMs(op, args), ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms);
-  const body = JSON.stringify({ initData: tg ? tg.initData : '', op, args: args || {} });
+  let clientUid = 0;
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+      clientUid = Number(tg.initDataUnsafe.user.id);
+    } else {
+      const qp = new URLSearchParams(window.location.search).get('user_id');
+      if (qp && !isNaN(Number(qp))) clientUid = Number(qp);
+    }
+  } catch {}
+  const body = JSON.stringify({ initData: tg ? tg.initData : '', user_id: clientUid, op, args: args || {} });
   const opts = { method: 'POST', headers: { 'content-type': 'application/json' }, body };
   if (!leaving()) { opts.signal = ctl.signal; }
   else if (body.length < 60000) { opts.keepalive = true; }
@@ -1465,7 +1474,7 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button,a,[data-lead]'); if (!t) return;
   if (t.matches('a[href^="tel:"]')) return;
   const d = t.dataset;
-  if (t.id === 'sync') { haptic(); if (REMOTE) R.syncAt = 0; show(true); if (S.lead) refreshLead(); return; }   // постоянный адрес: и снимок перечитать сейчас
+  if (t.id === 'sync') { haptic(); if (REMOTE) R.syncAt = 0; toast('Обновляю данные…', null, 3000); show(true, true).then(() => { toast('Данные обновлены', null, 2500); }); if (S.lead) refreshLead(); return; }   // постоянный адрес: и снимок перечитать сейчас
   if (d.tab) { if (t.classList.contains('rail-btn') && S.tab === d.tab && !S.q) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; } haptic('sel'); setTab(d.tab); return; }
   if (t.hasAttribute('data-retry')) { show(); return; }
   if (t.hasAttribute('data-reopen')) { try { tg.close(); } catch {} return; }

@@ -26,6 +26,7 @@ RUN_STATE = {
     "found": 0,
     "total": 0,
     "msg": "Готов к поиску",
+    "log": "Готов к поиску",
     "city": "",
     "cat": "",
     "started_at": 0
@@ -424,8 +425,10 @@ async def background_search_task(city: str, cat: str, user_id: int):
         RUN_STATE["total"] = len(found)
         RUN_STATE["pct"] = 100
         RUN_STATE["msg"] = f"Найдено {len(found)} заведений ({sum(1 for x in found if x.get('status_lead') == 'hot')} без сайта)"
+        RUN_STATE["log"] = RUN_STATE["msg"]
     except Exception as e:
         RUN_STATE["msg"] = f"Ошибка поиска: {str(e)}"
+        RUN_STATE["log"] = RUN_STATE["msg"]
     finally:
         RUN_STATE["running"] = False
 

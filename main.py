@@ -98,15 +98,41 @@ async def main() -> None:
     client = None
     if config.API_ID and config.API_HASH:
         try:
+            from telethon.sessions import StringSession
+            session_target = None
+
+            # 1. Проверяем строковую сессию из переменных окружения
+            str_session_val = (config.TELEGRAM_STRING_SESSION or "").strip()
+            if str_session_val:
+                session_target = StringSession(str_session_val)
+                logger.info("[Telethon] Загружена сессия из TELEGRAM_STRING_SESSION")
+            else:
+                # 2. Проверяем локальный файл .session_string
+                local_str_file = os.path.join(os.path.dirname(__file__), ".session_string")
+                if os.path.exists(local_str_file):
+                    try:
+                        with open(local_str_file, "r", encoding="utf-8") as sf:
+                            s_data = sf.read().strip()
+                        if s_data:
+                            session_target = StringSession(s_data)
+                            logger.info("[Telethon] Загружена сессия из .session_string")
+                    except Exception as sf_err:
+                        logger.warning("Ошибка чтения .session_string: %s", sf_err)
+
+            # 3. Файловая сессия по умолчанию
+            if not session_target:
+                session_target = config.SESSION_NAME
+
             client = TelegramClient(
-                session=config.SESSION_NAME,
+                session=session_target,
                 api_id=config.API_ID,
                 api_hash=config.API_HASH,
                 proxy=proxy_settings,
-                connection_retries=3,
+                connection_retries=5,
                 retry_delay=5,
-                auto_reconnect=False,
+                auto_reconnect=True,
             )
+            client.flood_sleep_threshold = 60
             parser_module.setup_parser(client=client, bot=bot_instance)
             bot_module.set_telethon_client(client)
         except Exception as tel_init_err:
@@ -131,11 +157,19 @@ async def main() -> None:
     async def run_telethon():
         if not client:
             return
-        session_file = f"{config.SESSION_NAME}.session"
-        if not os.path.exists(session_file):
-            logger.info("Файл сессии Telethon (%s) не найден. Парсер чатов отключен (Mini App и бот активны).", session_file)
-            while True:
-                await asyncio.sleep(3600)
+        
+        is_string_session = hasattr(client.session, "save") and not isinstance(client.session, str)
+        if not is_string_session:
+            session_file = f"{config.SESSION_NAME}.session"
+            if not os.path.exists(session_file):
+                logger.warning(
+                    "[!] Файл сессии Telethon (%s) не найден и TELEGRAM_STRING_SESSION не задан. "
+                    "Парсер чатов ожидает сессию. Задайте TELEGRAM_STRING_SESSION в Bothost.",
+                    session_file
+                )
+                while True:
+                    await asyncio.sleep(60)
+
         while True:
             try:
                 logger.info("Подключение Telethon к чатам Telegram...")
@@ -146,17 +180,24 @@ async def main() -> None:
                         await client.disconnect()
                     except Exception:
                         pass
-                    await asyncio.sleep(3600)
+                    await asyncio.sleep(120)
                     continue
-                logger.info("[OK] Telethon подключен к чатам.")
+                
+                try:
+                    me = await client.get_me()
+                    username_str = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
+                    logger.info("[OK] Telethon подключен к чатам как %s (%s)", username_str, getattr(me, "first_name", ""))
+                except Exception:
+                    logger.info("[OK] Telethon подключен к чатам.")
+                    
                 await client.run_until_disconnected()
             except Exception as e:
-                logger.warning("[!] Telethon ожидает стабильной связи: %s (повтор через 60 сек)", e)
+                logger.warning("[!] Telethon сетевая пауза: %s (повтор через 20 сек)", e)
                 try:
                     await client.disconnect()
                 except Exception:
                     pass
-                await asyncio.sleep(60)
+                await asyncio.sleep(20)
 
     # Функция запуска веб-сервера Telegram Mini App (B2B Лидогенератор)
     async def run_miniapp():

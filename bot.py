@@ -1690,13 +1690,69 @@ async def cmd_admin(message: Message, state: FSMContext) -> None:
 
 
 @router.message(Command("stats"))
+@router.message(Command("status"))
+@router.message(Command("telethon"))
+@router.message(Command("diag"))
 async def cmd_stats(message: Message) -> None:
-    """Быстрая сводка статистики."""
-    if not db.is_admin(message.from_user.id):
-        await message.answer("[x] Доступ запрещен.")
+    """Быстрая сводка диагностики и статистики системы."""
+    user_id = message.from_user.id
+    is_adm = db.is_admin(user_id)
+    if not is_adm:
+        await message.answer("🔒 Команда диагностики доступна только администратору.")
         return
-    text, markup = await build_admin_panel_content()
-    await message.answer(text, reply_markup=markup, parse_mode="HTML")
+
+    # 1. Telethon статус
+    tel_status = "❌ Не инициализирован (нет сессии)"
+    tel_user = "—"
+    tel_chats_count = 0
+    if _TELETHON_CLIENT:
+        try:
+            if _TELETHON_CLIENT.is_connected():
+                if await _TELETHON_CLIENT.is_user_authorized():
+                    me = await _TELETHON_CLIENT.get_me()
+                    uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
+                    tel_status = "✅ <b>Активен (В сети)</b>"
+                    tel_user = f"{uname} ({getattr(me, 'first_name', '')})"
+                else:
+                    tel_status = "⚠️ Подключен, но НЕ авторизован (нужна авторизация)"
+            else:
+                tel_status = "🔄 В процессе подключения / ожидание сети"
+        except Exception as e:
+            tel_status = f"⚠️ Ошибка проверки: {e}"
+
+    chats_in_base = len(chat_manager.get_all_chats())
+    total_users = len(await db.get_all_user_ids())
+    my_leads = len(await db.get_b2b_leads(user_id))
+    my_cats = await db.get_user_categories(user_id)
+    cats_str = ", ".join(list(my_cats)[:5]) + (f" (+{len(my_cats)-5})" if len(my_cats) > 5 else "") if my_cats else "Не выбраны"
+
+    diag_lines = [
+        "📊 <b>ДИАГНОСТИКА СИСТЕМЫ LEADHUNTER</b>",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "",
+        "📡 <b>Парсер чатов (Telethon MTProto):</b>",
+        f"• Статус: {tel_status}",
+        f"• Аккаунт: <code>{tel_user}</code>",
+        f"• Целевых чатов в файле: <b>{chats_in_base}</b>",
+        "",
+        "🌐 <b>B2B Web-терминал (Mini App):</b>",
+        f"• URL: <code>{config.MINI_APP_URL}</code>",
+        f"• Порт сервера: <b>{config.MINI_APP_PORT}</b>",
+        f"• Лидов в вашей CRM: <b>{my_leads}</b>",
+        "",
+        "⚙️ <b>Ваши фильтры заказов:</b>",
+        f"• Категории: <code>{cats_str}</code>",
+        f"• Всего пользователей в БД: <b>{total_users}</b>",
+        "",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "<i>Если Telethon не активен — укажите переменную TELEGRAM_STRING_SESSION в Bothost.</i>"
+    ]
+    diag_text = "\n".join(diag_lines)
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⚙️ Панель управления", callback_data="admin_panel")],
+        [InlineKeyboardButton(text="⚡️ Запустить Mini App", web_app=WebAppInfo(url=config.MINI_APP_URL))],
+    ])
+    await message.answer(diag_text, reply_markup=kb, parse_mode="HTML")
 
 
 @router.callback_query(F.data == "admin_panel")

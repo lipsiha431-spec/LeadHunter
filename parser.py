@@ -137,7 +137,7 @@ def extract_direct_client_contact(raw_text: str, sender: any, chat: any) -> tupl
     """
     Извлекает подтвержденный контакт заказчика (реального человека, не бота и не канала).
     Возвращает (username, user_id, contact_display).
-    Если контакта живого человека нет — возвращает (None, None, "").
+    Если контакта живого человека нет — возвращает (None, None, "В источнике / чате").
     """
     chat_username = (getattr(chat, "username", "") or "").lower()
 
@@ -152,7 +152,7 @@ def extract_direct_client_contact(raw_text: str, sender: any, chat: any) -> tupl
             display = f"{f_name} (ID: {s_id})" if f_name else f"ID: {s_id}"
             return None, s_id, display
 
-    # 2. Если сообщение из канала с объявлениями — заказчик ОБЯЗАН оставить личный контакт в тексте:
+    # 2. Если в тексте объявления указан личный контакт заказчика:
     found_handles = re.findall(r"(?:@|t\.me/)([a-zA-Z0-9_]{4,32})", raw_text)
     for handle in found_handles:
         h_lower = handle.lower()
@@ -162,7 +162,10 @@ def extract_direct_client_contact(raw_text: str, sender: any, chat: any) -> tupl
             continue
         return handle, None, f"@{handle}"
 
-    return None, None, ""
+    # 3. Резервный контакт: если автор анонимен или контакт не в тексте,
+    # перенаправляем к сообщению в чате (чтобы не терять реальные заказы)
+    chat_title = getattr(chat, "title", "Чат/Канал")
+    return None, None, f"В источнике: {chat_title}"
 
 
 def mask_contact(username: Optional[str], first_name: Optional[str]) -> str:
@@ -244,7 +247,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         msg_date = getattr(event, "date", None)
         if msg_date:
             now_utc = datetime.now(timezone.utc)
-            if (now_utc - msg_date).total_seconds() > 90:
+            if (now_utc - msg_date).total_seconds() > 180:
                 return
 
         text_lower = raw_text.lower()

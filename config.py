@@ -5,10 +5,15 @@ config.py — Модуль конфигурации проекта Telegram SaaS
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Загружаем переменные из файла .env, если он существует
-load_dotenv()
+# Загружаем переменные из файла .env рядом с config.py
+_env_path = Path(__file__).resolve().parent / ".env"
+if _env_path.exists():
+    load_dotenv(dotenv_path=_env_path)
+else:
+    load_dotenv()
 
 def _get_int(key: str, default: int) -> int:
     val = os.getenv(key)
@@ -17,11 +22,12 @@ def _get_int(key: str, default: int) -> int:
     return default
 
 # --- Настройки авторизации Telethon (Client API) ---
-API_ID: int = _get_int("API_ID", 0)
-API_HASH: str = os.getenv("API_HASH", "").strip()
+API_ID: int = _get_int("API_ID", 30968277)
+API_HASH: str = (os.getenv("API_HASH") or "2e621b790f02875a3ea72b245a909551").strip()
 
-# Имя файла сессии для Telethon
+# Имя файла сессии для Telethon или строковая сессия (для серверов/контейнеров)
 SESSION_NAME: str = os.getenv("SESSION_NAME", "lead_parser_session")
+TELEGRAM_STRING_SESSION: str = (os.getenv("TELEGRAM_STRING_SESSION") or os.getenv("SESSION_STRING") or "").strip()
 
 # --- Настройки Telegram-бота (aiogram) ---
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
@@ -65,12 +71,25 @@ BUYER_TRIGGERS: list[str] = [
     "нужен",
     "нужна",
     "нужны",
+    "нужно",
+    "надо",
     "требуется",
     "требуются",
     "кто сделает",
+    "кто может",
     "посоветуйте",
     "подскажите",
     "ищем",
+    "ищется",
     "заказ",
     "бюджет",
+    "тз",
+    "оплата",
+    "проект",
+    "задача",
+    "стоимость",
+    "дедлайн",
+    "сделать",
+    "разработка",
+    "создание",
 ]
