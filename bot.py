@@ -2880,7 +2880,7 @@ async def cmd_set_price(message: Message) -> None:
         return
     parts = message.text.split()
     if len(parts) < 3:
-        await message.answer("⚠️ Использование: <code>/set_price <3|30|life> <цена_руб></code>", parse_mode="HTML")
+        await message.answer("⚠️ Использование: <code>/set_price [3|30|life] [цена_руб]</code>", parse_mode="HTML")
         return
     plan_key = parts[1].lower()
     price = parts[2]
