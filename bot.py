@@ -1729,24 +1729,27 @@ async def cmd_stats(message: Message, state: FSMContext) -> None:
     if _TELETHON_CLIENT:
         try:
             if _TELETHON_CLIENT.is_connected():
-                if await _TELETHON_CLIENT.is_user_authorized():
-                    me = await _TELETHON_CLIENT.get_me()
-                    uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
-                    tel_status = "✅ <b>Активен (В сети)</b>"
-                    tel_user = f"{uname} ({getattr(me, 'first_name', '')})"
-                else:
-                    tel_status = "⚠️ Подключен, но НЕ авторизован (нужна авторизация)"
+                async def _get_tel_info():
+                    if await _TELETHON_CLIENT.is_user_authorized():
+                        me = await _TELETHON_CLIENT.get_me()
+                        uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
+                        u_display = f"{uname} ({getattr(me, 'first_name', '')})"
+                        cnt = 0
+                        try:
+                            dlgs = await _TELETHON_CLIENT.get_dialogs(limit=100)
+                            cnt = sum(1 for d in dlgs if d.is_channel or d.is_group)
+                        except Exception:
+                            pass
+                        return "✅ <b>Активен (В сети)</b>", u_display, cnt
+                    return "⚠️ Подключен, но НЕ авторизован", "—", 0
+
+                tel_status, tel_user, tel_chats_count = await asyncio.wait_for(_get_tel_info(), timeout=2.0)
             else:
                 tel_status = "🔄 В процессе подключения / ожидание сети"
+        except asyncio.TimeoutError:
+            tel_status = "🔄 Подключение Telethon (ожидание ответа сети)"
         except Exception as e:
-            tel_status = f"⚠️ Ошибка проверки: {e}"
-
-    if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
-        try:
-            dialogs = await asyncio.wait_for(_TELETHON_CLIENT.get_dialogs(limit=150), timeout=2.5)
-            tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
-        except Exception:
-            pass
+            tel_status = f"⚠️ Ошибка проверки: {e}" 
 
     chats_in_base = len(chat_manager.get_all_chats())
     total_users = len(await db.get_all_user_ids())
@@ -1926,28 +1929,31 @@ async def cb_admin_sys_check(callback: CallbackQuery) -> None:
     # 1. Telethon статус
     tel_status = "❌ Не инициализирован (нет сессии)"
     tel_user = "—"
+    tel_chats_count = 0
     if _TELETHON_CLIENT:
         try:
             if _TELETHON_CLIENT.is_connected():
-                if await _TELETHON_CLIENT.is_user_authorized():
-                    me = await _TELETHON_CLIENT.get_me()
-                    uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
-                    tel_status = "✅ <b>Активен (В сети)</b>"
-                    tel_user = f"{uname} ({getattr(me, 'first_name', '')})"
-                else:
-                    tel_status = "⚠️ Подключен, но НЕ авторизован"
+                async def _get_tel_info():
+                    if await _TELETHON_CLIENT.is_user_authorized():
+                        me = await _TELETHON_CLIENT.get_me()
+                        uname = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
+                        u_display = f"{uname} ({getattr(me, 'first_name', '')})"
+                        cnt = 0
+                        try:
+                            dlgs = await _TELETHON_CLIENT.get_dialogs(limit=100)
+                            cnt = sum(1 for d in dlgs if d.is_channel or d.is_group)
+                        except Exception:
+                            pass
+                        return "✅ <b>Активен (В сети)</b>", u_display, cnt
+                    return "⚠️ Подключен, но НЕ авторизован", "—", 0
+
+                tel_status, tel_user, tel_chats_count = await asyncio.wait_for(_get_tel_info(), timeout=2.0)
             else:
                 tel_status = "🔄 В процессе подключения / ожидание сети"
+        except asyncio.TimeoutError:
+            tel_status = "🔄 Подключение Telethon (ожидание ответа сети)"
         except Exception as e:
-            tel_status = f"⚠️ Ошибка: {e}"
-
-    tel_chats_count = 0
-    if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
-        try:
-            dialogs = await asyncio.wait_for(_TELETHON_CLIENT.get_dialogs(limit=150), timeout=2.5)
-            tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
-        except Exception:
-            pass
+            tel_status = f"⚠️ Ошибка проверки: {e}" 
 
     chats_in_base = len(chat_manager.get_all_chats())
     total_users = len(await db.get_all_user_ids())
