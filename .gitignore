@@ -15,8 +15,6 @@ ApiTokens.env
 # Telethon sessions & SQLite local databases
 *.session
 *.session-journal
-*.session_string
-.session_string
 *.db
 *.db-wal
 *.db-shm

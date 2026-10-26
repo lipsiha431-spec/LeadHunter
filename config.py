@@ -27,10 +27,14 @@ API_HASH: str = (os.getenv("API_HASH") or "2e621b790f02875a3ea72b245a909551").st
 
 # Имя файла сессии для Telethon или строковая сессия (для серверов/контейнеров)
 SESSION_NAME: str = os.getenv("SESSION_NAME", "lead_parser_session")
-TELEGRAM_STRING_SESSION: str = (os.getenv("TELEGRAM_STRING_SESSION") or os.getenv("SESSION_STRING") or "").strip()
+TELEGRAM_STRING_SESSION: str = (
+    os.getenv("TELEGRAM_STRING_SESSION")
+    or os.getenv("SESSION_STRING")
+    or "1ApWapzMBu7P0dt91YBB0-fkOPN85auNv626Y_Cs6NpOrK3RlMWGIfUDkjXPcJfjfz-ehrUrLTJjf9p3j1ZuPu8GdTkcDjrmmQjrTxyACBl1CtqCC6Ou1mW6hVbZq1lKbv71sC1YLRPrTiCZFe2LsP2IQ8E5TO-ZFWv1C0avSeK-LaAZc7NWFshYFNOeTxxI0VWaCKnfgDWKkzDl7K0ww4UxUzezxdbl7_ysZMjDVazPP2Xk8R-FLVRC07baSQwLrZ0_R2osxMfdrulwGgRx1PHevTWOjrifRKchrIAztClzWQVLiup_dp44g4616GgagCvXVYACuKkOBDX4s8haEmSATkWFjy2k="
+).strip()
 
 # --- Настройки Telegram-бота (aiogram) ---
-BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
+BOT_TOKEN: str = (os.getenv("BOT_TOKEN") or "8870871677:AAFz3dqgPv3ikwUDevfhSc2_gK0--tJU2ks").strip()
 
 # Telegram ID администратора (узнать свой ID можно в боте @userinfobot)
 ADMIN_ID: int = _get_int("ADMIN_ID", 1795524760)
