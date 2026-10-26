@@ -106,8 +106,27 @@ async def main() -> None:
             if str_session_val:
                 session_target = StringSession(str_session_val)
                 logger.info("[Telethon] Загружена сессия из TELEGRAM_STRING_SESSION")
-            else:
-                # 2. Проверяем локальный файл .session_string
+
+            # 2. Проверяем защищенную сессию session.enc (расшифровывается через BOT_TOKEN)
+            if not session_target:
+                enc_file = os.path.join(os.path.dirname(__file__), "session.enc")
+                clean_token = (config.BOT_TOKEN or "").strip()
+                if os.path.exists(enc_file) and clean_token:
+                    try:
+                        import base64, hashlib
+                        from cryptography.fernet import Fernet
+                        key = base64.urlsafe_b64encode(hashlib.sha256(clean_token.encode()).digest())
+                        with open(enc_file, "rb") as ef:
+                            enc_data = ef.read().strip()
+                        dec_str = Fernet(key).decrypt(enc_data).decode("utf-8").strip()
+                        if dec_str:
+                            session_target = StringSession(dec_str)
+                            logger.info("[Telethon] Успешно расшифрована и загружена сессия из session.enc")
+                    except Exception as dec_err:
+                        logger.warning("[Telethon] Ошибка расшифровки session.enc: %s", dec_err)
+
+            # 3. Проверяем локальный файл .session_string
+            if not session_target:
                 local_str_file = os.path.join(os.path.dirname(__file__), ".session_string")
                 if os.path.exists(local_str_file):
                     try:
@@ -119,7 +138,7 @@ async def main() -> None:
                     except Exception as sf_err:
                         logger.warning("Ошибка чтения .session_string: %s", sf_err)
 
-            # 3. Файловая сессия по умолчанию
+            # 4. Файловая сессия по умолчанию
             if not session_target:
                 session_target = config.SESSION_NAME
 
@@ -158,7 +177,8 @@ async def main() -> None:
         if not client:
             return
         
-        is_string_session = hasattr(client.session, "save") and not isinstance(client.session, str)
+        from telethon.sessions import StringSession
+        is_string_session = isinstance(client.session, StringSession)
         if not is_string_session:
             session_file = f"{config.SESSION_NAME}.session"
             if not os.path.exists(session_file):

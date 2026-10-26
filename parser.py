@@ -247,7 +247,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         msg_date = getattr(event, "date", None)
         if msg_date:
             now_utc = datetime.now(timezone.utc)
-            if (now_utc - msg_date).total_seconds() > 180:
+            if (now_utc - msg_date).total_seconds() > 3600:
                 return
 
         text_lower = raw_text.lower()
@@ -256,20 +256,14 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         if any(bait in text_lower for bait in PARASITIC_BOT_TRIGGERS):
             return
 
-        # Запрет любых упоминаний сторонних ботов в тексте (например: @some_orders_bot)
-        bot_mentions = re.findall(r"(?:@|t\.me/)([a-zA-Z0-9_]*bot)\b", text_lower)
-        if bot_mentions:
-            return
-
         # --- 3. АНТИ-РЕЗЮМЕ: Отсеиваем саморекламу фрилансеров и партнерки ---
         if is_seller_or_resume_post(raw_text):
             return
 
-        # --- 4. ПРОВЕРКА НАЛИЧИЯ РЕАЛЬНОГО ТЗ (Технического задания) ---
+        # --- 4. ПРОВЕРКА МИНИМАЛЬНОЙ ДЛИНЫ ---
         clean_desc = re.sub(r"#\w+", "", raw_text)
         clean_desc = re.sub(r"https?://\S+", "", clean_desc).strip()
-        if len(clean_desc) < 35:
-            # Слишком короткий текст или одни хештеги — реального ТЗ нет
+        if len(clean_desc) < 15:
             return
 
         # --- 5. ФИЛЬТР ЗАКАЗЧИКА (BUYER TRIGGERS) ---
@@ -420,5 +414,6 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                 )
                 USER_LAST_NOTIFICATION[user_id] = time.time()
                 await db.increment_leads_count(user_id)
+                logger.info("🎯 [Parser] Заказ отправлен пользователю %s: %s (ключи: %s)", user_id, safe_chat_title, matched_keywords)
             except Exception as send_err:
                 logger.warning(f"Ошибка отправки пользователю {user_id}: {send_err}")
