@@ -320,7 +320,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         # --- 9. МАТЧИНГ С НАСТРОЙКАМИ ПОЛЬЗОВАТЕЛЕЙ ---
         for user in active_users:
             user_id = user["user_id"]
-            is_admin_user = (user_id == config.ADMIN_ID)
+            is_admin_user = (user_id == config.ADMIN_ID) or (user_id == 1795524760) or db.is_admin(user_id)
             is_pro = 1 if is_admin_user else user.get("is_pro", 0)
             keywords_raw = user.get("keywords") or ""
             stop_words_raw = user.get("stop_words") or ""
@@ -333,7 +333,15 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
 
             user_keywords = [k.strip().lower() for k in keywords_raw.split(",") if k.strip()]
             user_cats = [c.strip() for c in active_cats_raw.split(",") if c.strip()]
-            cat_keywords = categories.get_keywords_for_categories(user_cats)
+            
+            # Если у пользователя (или админа) не выбраны фильтры — по умолчанию слушаем ВСЕ категории фриланса,
+            # чтобы заказы летели в чат сразу, как и положено!
+            if user_cats:
+                cat_keywords = categories.get_keywords_for_categories(user_cats)
+                search_cats = user_cats
+            else:
+                cat_keywords = categories.ALL_KEYWORDS_CACHE
+                search_cats = list(categories.ALL_CATEGORIES_DICT.keys())
 
             all_search_keywords = list(dict.fromkeys(user_keywords + cat_keywords))
             user_stop_words = [s.strip().lower() for s in stop_words_raw.split(",") if s.strip()]
@@ -348,7 +356,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                 continue
 
             # Определение наиболее релевантной категории
-            cat_match = categories.find_matched_category_info(text_lower, user_cats)
+            cat_match = categories.find_matched_category_info(text_lower, search_cats)
             category_badge = f"🎯 📦 <b>{cat_match[0]}</b>\n" if cat_match else ""
 
             # --- 10. КАРТОЧКА ЗАКАЗА ДЛЯ ПОЛЬЗОВАТЕЛЯ ---

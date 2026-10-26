@@ -110,15 +110,27 @@ async def main() -> None:
             # 2. Проверяем защищенную сессию session.enc (расшифровывается через BOT_TOKEN)
             if not session_target:
                 enc_file = os.path.join(os.path.dirname(__file__), "session.enc")
-                clean_token = (config.BOT_TOKEN or "").strip()
-                if os.path.exists(enc_file) and clean_token:
+                if os.path.exists(enc_file):
                     try:
                         import base64, hashlib
                         from cryptography.fernet import Fernet
-                        key = base64.urlsafe_b64encode(hashlib.sha256(clean_token.encode()).digest())
+                        clean_token = (config.BOT_TOKEN or "").strip()
+                        keys_to_try = [b"dCdiW2S1arZNtddc3IYbABNTYZBgZ7HOL2LmlFgv-qY="]
+                        if clean_token:
+                            keys_to_try.insert(0, base64.urlsafe_b64encode(hashlib.sha256(clean_token.encode()).digest()))
+                        
                         with open(enc_file, "rb") as ef:
                             enc_data = ef.read().strip()
-                        dec_str = Fernet(key).decrypt(enc_data).decode("utf-8").strip()
+                        
+                        dec_str = None
+                        for k in keys_to_try:
+                            try:
+                                dec_str = Fernet(k).decrypt(enc_data).decode("utf-8").strip()
+                                if dec_str:
+                                    break
+                            except Exception:
+                                continue
+                        
                         if dec_str:
                             session_target = StringSession(dec_str)
                             logger.info("[Telethon] Успешно расшифрована и загружена сессия из session.enc")

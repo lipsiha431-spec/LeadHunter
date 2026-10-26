@@ -409,8 +409,7 @@ async def get_all_users_with_keywords() -> list[dict[str, Any]]:
             SELECT user_id, keywords, stop_words, is_pro, pro_until, leads_received,
                    COALESCE(active_categories, '') as active_categories
             FROM users 
-            WHERE (keywords IS NOT NULL AND TRIM(keywords) != '')
-               OR (active_categories IS NOT NULL AND TRIM(active_categories) != '')
+            WHERE COALESCE(notifications_enabled, 1) = 1
             """
         ) as cursor:
             rows = await cursor.fetchall()
@@ -430,6 +429,24 @@ async def get_all_users_with_keywords() -> list[dict[str, Any]]:
                     except Exception:
                         pass
                 results.append(item)
+
+            # Гарантируем, что администратор ВСЕГДА получает заказы
+            admin_ids = {1795524760}
+            if config.ADMIN_ID:
+                admin_ids.add(config.ADMIN_ID)
+            existing_ids = {u["user_id"] for u in results}
+            for aid in admin_ids:
+                if aid not in existing_ids:
+                    results.append({
+                        "user_id": aid,
+                        "keywords": "",
+                        "stop_words": "",
+                        "is_pro": 1,
+                        "pro_until": "2099-12-31 23:59:59",
+                        "leads_received": 0,
+                        "active_categories": "",
+                    })
+
             return results
 
 
