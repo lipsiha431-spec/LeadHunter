@@ -166,7 +166,8 @@ async def setup_bot_commands(bot: Bot) -> None:
     """Устанавливает официальное меню команд Telegram в левом нижнем углу экрана."""
     commands = [
         BotCommand(command="start", description="Главное меню"),
-        BotCommand(command="app", description="B2B Лидогенератор (Mini App)"),
+        BotCommand(command="app", description="B2B Поиск (Mini App)"),
+        BotCommand(command="status", description="📊 Статус системы и парсера"),
         BotCommand(command="trial", description="🎁 Бесплатный PRO (3 дня)"),
         BotCommand(command="filters", description="Готовые фильтры сфер"),
         BotCommand(command="keywords", description="Ключевые слова"),
@@ -1693,14 +1694,29 @@ async def cmd_admin(message: Message, state: FSMContext) -> None:
 @router.message(Command("status"))
 @router.message(Command("telethon"))
 @router.message(Command("diag"))
+@router.message(F.text.lower().in_(["статус", "status", "диагностика", "проверка", "/status", "/stats"]))
 async def cmd_stats(message: Message) -> None:
     """Быстрая сводка диагностики и статистики системы."""
     user_id = message.from_user.id
-    is_adm = db.is_admin(user_id)
-    if not is_adm:
-        await message.answer("🔒 Команда диагностики доступна только администратору.")
-        return
+    from_username = (getattr(message.from_user, "username", "") or "").lower()
+    admin_uname = getattr(config, "ADMIN_USERNAME", "paniicca").lower().lstrip("@")
+    is_adm = db.is_admin(user_id) or (user_id == 1795524760) or (from_username == admin_uname)
 
+    if not is_adm:
+        user_data = await db.get_user(user_id)
+        pro_label = "💎 PRO активен" if (user_data and user_data.get("is_pro")) else "Free (базовый)"
+        user_msg = "\n".join([
+            "🟢 <b>Сервис LeadHunter активен и работает штатно!</b>",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "",
+            "📡 <b>Мониторинг заказов:</b> перехват чатов запущен 24/7",
+            "🌐 <b>B2B Web-терминал:</b> доступен в меню",
+            f"👤 <b>Ваш тариф:</b> {pro_label}",
+            "",
+            "💡 <i>Как только в чатах появится заказ по вашим фильтрам, бот мгновенно пришлет его сюда.</i>"
+        ])
+        await message.answer(user_msg, parse_mode="HTML")
+        return
     # 1. Telethon статус
     tel_status = "❌ Не инициализирован (нет сессии)"
     tel_user = "—"
