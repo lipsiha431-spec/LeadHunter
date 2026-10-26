@@ -31,9 +31,9 @@ from aiogram.types import (
     PreCheckoutQuery,
     WebAppInfo,
 )
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, any_state
 
 import config
 import db
@@ -1694,12 +1694,13 @@ async def cmd_admin(message: Message, state: FSMContext) -> None:
     await message.answer(text, reply_markup=markup, parse_mode="HTML")
 
 
-@router.message(Command("stats"))
-@router.message(Command("status"))
-@router.message(Command("telethon"))
-@router.message(Command("diag"))
-@router.message(F.text.lower().in_(["статус", "status", "диагностика", "проверка", "/status", "/stats"]))
-async def cmd_stats(message: Message) -> None:
+@router.message(Command("stats"), StateFilter(any_state))
+@router.message(Command("status"), StateFilter(any_state))
+@router.message(Command("telethon"), StateFilter(any_state))
+@router.message(Command("diag"), StateFilter(any_state))
+@router.message(F.text.lower().in_(["статус", "status", "диагностика", "проверка", "/status", "/stats"]), StateFilter(any_state))
+async def cmd_stats(message: Message, state: FSMContext) -> None:
+    await state.clear()
     """Быстрая сводка диагностики и статистики системы."""
     user_id = message.from_user.id
     from_username = (getattr(message.from_user, "username", "") or "").lower()
@@ -1742,7 +1743,7 @@ async def cmd_stats(message: Message) -> None:
 
     if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
         try:
-            dialogs = await _TELETHON_CLIENT.get_dialogs(limit=300)
+            dialogs = await asyncio.wait_for(_TELETHON_CLIENT.get_dialogs(limit=150), timeout=2.5)
             tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
         except Exception:
             pass
@@ -1787,10 +1788,15 @@ async def cmd_stats(message: Message) -> None:
     await message.answer(diag_text, reply_markup=kb, parse_mode="HTML")
 
 
-@router.message(Command("test_order"))
-@router.message(Command("test"))
+@router.message(Command("test_order"), StateFilter(any_state))
+@router.message(Command("test"), StateFilter(any_state))
 @router.callback_query(F.data == "admin_test_lead")
-async def cb_admin_test_lead(event: Message | CallbackQuery) -> None:
+async def cb_admin_test_lead(event: Message | CallbackQuery, state: FSMContext = None) -> None:
+    if state:
+        try:
+            await state.clear()
+        except Exception:
+            pass
     """Генерирует и доставляет тестовый заказ в реальном формате для проверки доставки."""
     is_cb = isinstance(event, CallbackQuery)
     user_id = event.from_user.id
@@ -1938,7 +1944,7 @@ async def cb_admin_sys_check(callback: CallbackQuery) -> None:
     tel_chats_count = 0
     if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
         try:
-            dialogs = await _TELETHON_CLIENT.get_dialogs(limit=300)
+            dialogs = await asyncio.wait_for(_TELETHON_CLIENT.get_dialogs(limit=150), timeout=2.5)
             tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
         except Exception:
             pass
