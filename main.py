@@ -184,6 +184,67 @@ async def main() -> None:
                 logger.warning("Сетевая пауза в Telegram-боте: %s. Авто-переподключение через 5 сек...", e)
                 await asyncio.sleep(5.0)
 
+    # Фоновый воркер безопасного вступления в проверенные чаты
+    async def background_chat_joiner(client_inst):
+        """Фоновое безопасное вступление в проверенные чаты фриланса с вечным Mute."""
+        await asyncio.sleep(25)  # Небольшая пауза после старта
+        try:
+            from telethon.tl.functions.channels import JoinChannelRequest
+            from telethon.tl.functions.account import UpdateNotifySettingsRequest
+            from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
+            from telethon.errors import FloodWaitError, UserAlreadyParticipantError
+            import chat_manager
+
+            candidates = chat_manager.get_all_chats()
+            if not candidates:
+                return
+
+            dialogs = await client_inst.get_dialogs(limit=350)
+            existing_keys = set()
+            for d in dialogs:
+                u = getattr(d.entity, "username", None)
+                if u:
+                    existing_keys.add(u.lower())
+
+            to_join = []
+            for c in candidates:
+                clean = chat_manager.extract_username_or_link(c)
+                if clean and clean.lower() not in existing_keys and not clean.startswith("http"):
+                    to_join.append(clean)
+
+            if not to_join:
+                logger.info("🎯 [AutoJoiner] Telethon уже состоит во всех проверенных чатах (%d шт.)", len(existing_keys))
+                return
+
+            logger.info("🎯 [AutoJoiner] Найдено %d новых проверенных чатов. Запуск плавного вступления...", len(to_join))
+            joined = 0
+            for target in to_join:
+                try:
+                    entity = await client_inst.get_entity(target)
+                    await client_inst(JoinChannelRequest(entity))
+                    try:
+                        inp_peer = await client_inst.get_input_entity(entity)
+                        await client_inst(UpdateNotifySettingsRequest(
+                            peer=InputNotifyPeer(inp_peer),
+                            settings=InputPeerNotifySettings(mute_until=2147483647, silent=True)
+                        ))
+                    except Exception:
+                        pass
+                    joined += 1
+                    logger.info("✅ [AutoJoiner] Вступили в чат @%s (всего новых: %d)", target, joined)
+                    # Безопасная пауза 40 секунд между вступлениями во избежание FloodWait
+                    await asyncio.sleep(40)
+                except FloodWaitError as fwe:
+                    logger.warning("⏳ [AutoJoiner] FloodWait от Telegram: пауза %d сек.", fwe.seconds)
+                    await asyncio.sleep(fwe.seconds + 5)
+                except UserAlreadyParticipantError:
+                    pass
+                except Exception as join_err:
+                    logger.debug("Пропуск чата @%s: %s", target, join_err)
+                    await asyncio.sleep(5)
+        except Exception as bg_err:
+            logger.warning("Ошибка в фоновом авто-джойнере: %s", bg_err)
+
     # Функция запуска парсера Telethon с защитой от быстрого реконнекта
     async def run_telethon():
         if not client:
@@ -218,9 +279,19 @@ async def main() -> None:
                 try:
                     me = await client.get_me()
                     username_str = f"@{me.username}" if getattr(me, "username", None) else f"ID {getattr(me, 'id', '')}"
-                    logger.info("[OK] Telethon подключен к чатам как %s (%s)", username_str, getattr(me, "first_name", ""))
-                except Exception:
-                    logger.info("[OK] Telethon подключен к чатам.")
+                    dialogs = await client.get_dialogs(limit=300)
+                    active_chats = [d for d in dialogs if d.is_channel or d.is_group]
+                    logger.info(
+                        "[OK] Telethon подключен к чатам как %s (%s). Каналов/групп в мониторинге: %d",
+                        username_str,
+                        getattr(me, "first_name", ""),
+                        len(active_chats),
+                    )
+                except Exception as me_err:
+                    logger.info("[OK] Telethon подключен к чатам (%s)", me_err)
+                
+                # Запускаем фоновое плавное вступление в чаты базы
+                asyncio.create_task(background_chat_joiner(client))
                     
                 await client.run_until_disconnected()
             except Exception as e:

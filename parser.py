@@ -37,6 +37,22 @@ SEEN_MESSAGES_CACHE: dict[str, float] = {}
 # Защита от флуда по пользователям (user_id -> время последней отправки)
 USER_LAST_NOTIFICATION: dict[int, float] = {}
 
+# Глобальные счетчики работы парсера
+PARSER_STATS = {
+    "incoming_total": 0,
+    "leads_matched": 0,
+    "leads_delivered": 0,
+    "last_message_at": None,
+    "last_lead_at": None,
+    "last_chat_title": "—",
+}
+
+
+def get_parser_stats() -> dict:
+    """Возвращает живую статистику работы парсера."""
+    return dict(PARSER_STATS)
+
+
 # Стоп-триггеры паразитных каналов, ботов-переходников и заманух
 PARASITIC_BOT_TRIGGERS: list[str] = [
     "бот с заказами",
@@ -54,7 +70,6 @@ PARASITIC_BOT_TRIGGERS: list[str] = [
     "бот агрегатор",
     "бот для фрилансеров",
     "бот с вакансиями",
-    "id: ",  # ID хеш-постов авто-ботов (например: ID: 7de6c6aa-...)
     "хэштеги: #",
     "хештеги: #",
     "ты фрилансер и ищешь",
@@ -236,7 +251,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
     @client.on(events.NewMessage(incoming=True))
     async def handler(event: events.NewMessage.Event) -> None:
         raw_text = event.raw_text
-        if not raw_text or len(raw_text.strip()) < 20:
+        if not raw_text or len(raw_text.strip()) < 15:
             return
 
         # Игнорируем личные диалоги
@@ -247,8 +262,23 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         msg_date = getattr(event, "date", None)
         if msg_date:
             now_utc = datetime.now(timezone.utc)
-            if (now_utc - msg_date).total_seconds() > 3600:
+            if (now_utc - msg_date).total_seconds() > 7200:
                 return
+
+        try:
+            chat = await event.get_chat()
+            chat_title = getattr(chat, "title", "чат")
+        except Exception:
+            chat = None
+            chat_title = "чат"
+
+        # Увеличиваем счетчик входящих сообщений
+        PARSER_STATS["incoming_total"] += 1
+        PARSER_STATS["last_message_at"] = datetime.now().strftime("%H:%M:%S")
+        PARSER_STATS["last_chat_title"] = str(chat_title)
+
+        if PARSER_STATS["incoming_total"] % 25 == 1:
+            logger.info("📡 [Parser] Прослушка активна. Получено сообщений: %d (последнее из «%s»)", PARSER_STATS["incoming_total"], chat_title)
 
         text_lower = raw_text.lower()
 
@@ -263,7 +293,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         # --- 4. ПРОВЕРКА МИНИМАЛЬНОЙ ДЛИНЫ ---
         clean_desc = re.sub(r"#\w+", "", raw_text)
         clean_desc = re.sub(r"https?://\S+", "", clean_desc).strip()
-        if len(clean_desc) < 15:
+        if len(clean_desc) < 12:
             return
 
         # --- 5. ФИЛЬТР ЗАКАЗЧИКА (BUYER TRIGGERS) ---
@@ -281,14 +311,8 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         except Exception:
             sender = None
 
-        try:
-            chat = await event.get_chat()
-        except Exception:
-            chat = None
-
         client_username, client_user_id, contact_display = extract_direct_client_contact(raw_text, sender, chat)
         if not contact_display:
-            # В посте нет прямого контакта живого человека (рекламный пост без автора) — ОТСЕИВАЕМ!
             return
 
         # --- 8. ПОЛУЧЕНИЕ АКТИВНЫХ ПОЛЬЗОВАТЕЛЕЙ ИЗ БД ---
@@ -296,7 +320,6 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
         if not active_users:
             return
 
-        chat_title = getattr(chat, "title", "Группа/Канал")
         sender_first_name = getattr(sender, "first_name", "") if isinstance(sender, User) else ""
         msg_link = generate_message_link(chat, event.id)
 
@@ -309,13 +332,32 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
 
         now = time.time()
 
-        # Кнопка для прямой связи с заказчиком
+        # Формируем кликабельный контакт заказчика для текста
         if client_username:
-            direct_contact_url = f"https://t.me/{client_username}"
+            contact_html = f'<a href="https://t.me/{client_username}">@{html.escape(client_username)}</a>'
         elif client_user_id:
-            direct_contact_url = f"tg://user?id={client_user_id}"
+            contact_html = f'<a href="tg://user?id={client_user_id}">{html.escape(contact_display)}</a>'
         else:
-            direct_contact_url = msg_link
+            contact_html = f'<b>{html.escape(contact_display)}</b>'
+
+        # Формируем кнопки перехода (гарантированно валидные URL)
+        action_buttons = []
+        if client_username:
+            action_buttons.append(
+                InlineKeyboardButton(
+                    text="💬 Написать заказчику",
+                    url=f"https://t.me/{client_username}",
+                )
+            )
+        if msg_link and str(msg_link).startswith("http"):
+            action_buttons.append(
+                InlineKeyboardButton(
+                    text="🔗 Исходный пост",
+                    url=str(msg_link),
+                )
+            )
+
+        reply_markup_pro = InlineKeyboardMarkup(inline_keyboard=[action_buttons]) if action_buttons else None
 
         # --- 9. МАТЧИНГ С НАСТРОЙКАМИ ПОЛЬЗОВАТЕЛЕЙ ---
         for user in active_users:
@@ -355,6 +397,8 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
             if any(categories.match_keyword_in_text(sw, text_lower) for sw in user_stop_words):
                 continue
 
+            PARSER_STATS["leads_matched"] += 1
+
             # Определение наиболее релевантной категории
             cat_match = categories.find_matched_category_info(text_lower, search_cats)
             category_badge = f"🎯 📦 <b>{cat_match[0]}</b>\n" if cat_match else ""
@@ -367,24 +411,11 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                     f"━━━━━━━━━━━━━━━━━━\n"
                     f"{category_badge}"
                     f"📍 <b>Источник:</b> <i>{safe_chat_title}</i>\n"
-                    f"👤 <b>Прямой контакт заказчика:</b> <b>{html.escape(contact_display)}</b>\n\n"
+                    f"👤 <b>Прямой контакт:</b> {contact_html}\n\n"
                     f"📋 <b>ОПИСАНИЕ ЗАДАНИЯ (ТЗ):</b>\n"
                     f"<blockquote>{safe_text}</blockquote>"
                 )
-
-                buttons = [
-                    [
-                        InlineKeyboardButton(
-                            text="💬 Написать заказчику",
-                            url=direct_contact_url,
-                        ),
-                        InlineKeyboardButton(
-                            text="🔗 Исходный пост",
-                            url=msg_link,
-                        ),
-                    ]
-                ]
-                reply_markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                user_markup = reply_markup_pro
 
             else:
                 # === FREE ТАРИФ ===
@@ -400,7 +431,7 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                     f"<blockquote>{safe_text}</blockquote>"
                 )
 
-                reply_markup = InlineKeyboardMarkup(
+                user_markup = InlineKeyboardMarkup(
                     inline_keyboard=[
                         [
                             InlineKeyboardButton(
@@ -416,12 +447,14 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                 await bot.send_message(
                     chat_id=user_id,
                     text=notification_text,
-                    reply_markup=reply_markup,
+                    reply_markup=user_markup,
                     parse_mode="HTML",
                     disable_web_page_preview=True,
                 )
                 USER_LAST_NOTIFICATION[user_id] = time.time()
                 await db.increment_leads_count(user_id)
-                logger.info("🎯 [Parser] Заказ отправлен пользователю %s: %s (ключи: %s)", user_id, safe_chat_title, matched_keywords)
+                PARSER_STATS["leads_delivered"] += 1
+                PARSER_STATS["last_lead_at"] = datetime.now().strftime("%H:%M:%S")
+                logger.info("🎯 [Parser] Заказ #%d отправлен пользователю %s: «%s» (ключи: %s)", PARSER_STATS["leads_delivered"], user_id, safe_chat_title, matched_keywords)
             except Exception as send_err:
                 logger.warning(f"Ошибка отправки пользователю {user_id}: {send_err}")

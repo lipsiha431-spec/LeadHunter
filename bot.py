@@ -39,6 +39,7 @@ import config
 import db
 import categories
 import chat_manager
+import parser as parser_module
 
 router = Router()
 
@@ -251,7 +252,10 @@ def get_admin_panel_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="💳 Тарифы и цены", callback_data="admin_pricing_hub"),
             ],
             [
+                InlineKeyboardButton(text="🧪 Тестовый заказ", callback_data="admin_test_lead"),
                 InlineKeyboardButton(text="🏦 Реквизиты оплаты", callback_data="admin_requisites_hub"),
+            ],
+            [
                 InlineKeyboardButton(text="🏠 В главное меню", callback_data="btn_main_menu"),
             ],
         ]
@@ -1736,11 +1740,19 @@ async def cmd_stats(message: Message) -> None:
         except Exception as e:
             tel_status = f"⚠️ Ошибка проверки: {e}"
 
+    if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
+        try:
+            dialogs = await _TELETHON_CLIENT.get_dialogs(limit=300)
+            tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
+        except Exception:
+            pass
+
     chats_in_base = len(chat_manager.get_all_chats())
     total_users = len(await db.get_all_user_ids())
     my_leads = len(await db.get_b2b_leads(user_id))
     my_cats = await db.get_user_categories(user_id)
     cats_str = ", ".join(list(my_cats)[:5]) + (f" (+{len(my_cats)-5})" if len(my_cats) > 5 else "") if my_cats else "Не выбраны"
+    p_stats = parser_module.get_parser_stats()
 
     diag_lines = [
         "📊 <b>ДИАГНОСТИКА СИСТЕМЫ LEADHUNTER</b>",
@@ -1749,7 +1761,10 @@ async def cmd_stats(message: Message) -> None:
         "📡 <b>Парсер чатов (Telethon MTProto):</b>",
         f"• Статус: {tel_status}",
         f"• Аккаунт: <code>{tel_user}</code>",
-        f"• Целевых чатов в файле: <b>{chats_in_base}</b>",
+        f"• Активных чатов на аккаунте: <b>{tel_chats_count}</b> (в базе: <b>{chats_in_base}</b>)",
+        f"• Обработано сообщений: <b>{p_stats['incoming_total']}</b>",
+        f"• Найдено заказов: <b>{p_stats['leads_matched']}</b> (доставлено: <b>{p_stats['leads_delivered']}</b>)",
+        f"• Живой поток: <code>{p_stats['last_message_at'] or 'ожидание'}</code> (из «{html.escape(p_stats['last_chat_title'])}»)",
         "",
         "🌐 <b>B2B Web-терминал (Mini App):</b>",
         f"• URL: <code>{config.MINI_APP_URL}</code>",
@@ -1761,14 +1776,56 @@ async def cmd_stats(message: Message) -> None:
         f"• Всего пользователей в БД: <b>{total_users}</b>",
         "",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        "<i>Если Telethon не активен — укажите переменную TELEGRAM_STRING_SESSION в Bothost.</i>"
+        "<i>Если Telethon не активен — нажмите «Обновить из репозитория» в Bothost.</i>"
     ]
     diag_text = "\n".join(diag_lines)
     kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🧪 Отправить тестовый заказ", callback_data="admin_test_lead")],
         [InlineKeyboardButton(text="⚙️ Панель управления", callback_data="admin_panel")],
         [InlineKeyboardButton(text="⚡️ Запустить Mini App", web_app=WebAppInfo(url=config.MINI_APP_URL))],
     ])
     await message.answer(diag_text, reply_markup=kb, parse_mode="HTML")
+
+
+@router.message(Command("test_order"))
+@router.message(Command("test"))
+@router.callback_query(F.data == "admin_test_lead")
+async def cb_admin_test_lead(event: Message | CallbackQuery) -> None:
+    """Генерирует и доставляет тестовый заказ в реальном формате для проверки доставки."""
+    is_cb = isinstance(event, CallbackQuery)
+    user_id = event.from_user.id
+    if not (db.is_admin(user_id) or user_id == 1795524760):
+        if is_cb:
+            await event.answer("🔒 Только для администратора.", show_alert=True)
+        return
+
+    test_text = (
+        "💎 <b>[PRO] НАЙДЕН РЕАЛЬНЫЙ ЗАКАЗ (ТЕСТ)</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "🎯 📦 <b>IT: Боты, Скрипты & Парсеры</b>\n"
+        "📍 <b>Источник:</b> <i>Фриланс Заказы & Удаленка</i>\n"
+        "👤 <b>Прямой контакт:</b> <a href=\"https://t.me/paniicca\">@paniicca</a>\n\n"
+        "📋 <b>ОПИСАНИЕ ЗАДАНИЯ (ТЗ):</b>\n"
+        "<blockquote>Ищу опытного разработчика на Python (Telethon / aiogram 3.x) для настройки автопарсера заказов и Telegram-бота. "
+        "Бюджет 25 000 руб, дедлайн 2 дня. Срочно! Оплата по факту или безопасная сделка. Жду в ЛС.</blockquote>"
+    )
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="💬 Написать заказчику", url="https://t.me/paniicca"),
+            InlineKeyboardButton(text="🔗 Исходный пост", url="https://t.me/telegram"),
+        ]
+    ])
+
+    bot_inst = event.bot
+    await bot_inst.send_message(
+        chat_id=user_id,
+        text=test_text,
+        reply_markup=markup,
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
+    if is_cb:
+        await event.answer("✅ Тестовый заказ отправлен в чат!", show_alert=False)
 
 
 @router.callback_query(F.data == "admin_panel")
@@ -1878,9 +1935,18 @@ async def cb_admin_sys_check(callback: CallbackQuery) -> None:
         except Exception as e:
             tel_status = f"⚠️ Ошибка: {e}"
 
+    tel_chats_count = 0
+    if _TELETHON_CLIENT and _TELETHON_CLIENT.is_connected():
+        try:
+            dialogs = await _TELETHON_CLIENT.get_dialogs(limit=300)
+            tel_chats_count = sum(1 for d in dialogs if d.is_channel or d.is_group)
+        except Exception:
+            pass
+
     chats_in_base = len(chat_manager.get_all_chats())
     total_users = len(await db.get_all_user_ids())
     my_leads = len(await db.get_b2b_leads(user_id))
+    p_stats = parser_module.get_parser_stats()
 
     lines = [
         "📊 <b>РЕЗУЛЬТАТЫ СИСТЕМНОЙ ДИАГНОСТИКИ</b>",
@@ -1889,7 +1955,10 @@ async def cb_admin_sys_check(callback: CallbackQuery) -> None:
         "📡 <b>Парсер чатов (Telethon MTProto):</b>",
         f"• Статус: {tel_status}",
         f"• Аккаунт: <code>{tel_user}</code>",
-        f"• Целевых чатов в мониторинге: <b>{chats_in_base}</b>",
+        f"• Активных чатов на аккаунте: <b>{tel_chats_count}</b> (в базе: <b>{chats_in_base}</b>)",
+        f"• Обработано сообщений: <b>{p_stats['incoming_total']}</b>",
+        f"• Найдено заказов: <b>{p_stats['leads_matched']}</b> (доставлено: <b>{p_stats['leads_delivered']}</b>)",
+        f"• Живой поток: <code>{p_stats['last_message_at'] or 'ожидание'}</code> (из «{html.escape(p_stats['last_chat_title'])}»)",
         "",
         "🌐 <b>B2B Web-терминал (Mini App):</b>",
         f"• URL: <code>{config.MINI_APP_URL}</code>",
