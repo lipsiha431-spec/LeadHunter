@@ -1809,14 +1809,14 @@ async def cb_admin_test_lead(event: Message | CallbackQuery, state: FSMContext =
         return
 
     test_text = (
-        "💎 <b>[PRO] НАЙДЕН РЕАЛЬНЫЙ ЗАКАЗ (ТЕСТ)</b>\n"
+        "💼 <b>Новый заказ</b> <code>[Тест]</code>\n"
         "━━━━━━━━━━━━━━━━━━\n"
-        "🎯 📦 <b>IT: Боты, Скрипты & Парсеры</b>\n"
+        "🎯 <b>Категория:</b> IT: Разработка ботов и парсеров\n"
         "📍 <b>Источник:</b> <i>Фриланс Заказы & Удаленка</i>\n"
-        "👤 <b>Прямой контакт:</b> <a href=\"https://t.me/paniicca\">@paniicca</a>\n\n"
-        "📋 <b>ОПИСАНИЕ ЗАДАНИЯ (ТЗ):</b>\n"
-        "<blockquote>Ищу опытного разработчика на Python (Telethon / aiogram 3.x) для настройки автопарсера заказов и Telegram-бота. "
-        "Бюджет 25 000 руб, дедлайн 2 дня. Срочно! Оплата по факту или безопасная сделка. Жду в ЛС.</blockquote>"
+        "👤 <b>Заказчик:</b> <a href=\"https://t.me/paniicca\">@paniicca</a>\n\n"
+        "📝 <b>Текст заявки:</b>\n"
+        "<blockquote>Ищу разработчика на Python (aiogram / Telethon) для доработки Telegram-бота и парсера. "
+        "Бюджет 25 000 руб, дедлайн 2 дня. Оплата по факту или через гаранта. Жду примеры в ЛС.</blockquote>"
     )
     markup = InlineKeyboardMarkup(inline_keyboard=[
         [

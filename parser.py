@@ -401,18 +401,18 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
 
             # Определение наиболее релевантной категории
             cat_match = categories.find_matched_category_info(text_lower, search_cats)
-            category_badge = f"🎯 📦 <b>{cat_match[0]}</b>\n" if cat_match else ""
+            category_badge = f"🎯 <b>Категория:</b> {cat_match[0]}\n" if cat_match else ""
 
             # --- 10. КАРТОЧКА ЗАКАЗА ДЛЯ ПОЛЬЗОВАТЕЛЯ ---
             if is_pro == 1:
                 # === PRO ТАРИФ (ВСЕ КОНТАКТЫ ОТКРЫТЫ) ===
                 notification_text = (
-                    f"💎 <b>[PRO] НАЙДЕН РЕАЛЬНЫЙ ЗАКАЗ</b>\n"
+                    f"💼 <b>Новый заказ</b> <code>[PRO]</code>\n"
                     f"━━━━━━━━━━━━━━━━━━\n"
                     f"{category_badge}"
                     f"📍 <b>Источник:</b> <i>{safe_chat_title}</i>\n"
-                    f"👤 <b>Прямой контакт:</b> {contact_html}\n\n"
-                    f"📋 <b>ОПИСАНИЕ ЗАДАНИЯ (ТЗ):</b>\n"
+                    f"👤 <b>Заказчик:</b> {contact_html}\n\n"
+                    f"📝 <b>Текст заявки:</b>\n"
                     f"<blockquote>{safe_text}</blockquote>"
                 )
                 user_markup = reply_markup_pro
@@ -422,12 +422,12 @@ def setup_parser(client: TelegramClient, bot: Bot) -> None:
                 masked_contact = mask_contact(client_username, sender_first_name)
 
                 notification_text = (
-                    f"🎯 <b>НАЙДЕН РЕАЛЬНЫЙ ЗАКАЗ</b>\n"
+                    f"💼 <b>Новый заказ</b>\n"
                     f"━━━━━━━━━━━━━━━━━━\n"
                     f"{category_badge}"
                     f"📍 <b>Источник:</b> <i>{safe_chat_title}</i>\n"
-                    f"👤 <b>Прямой контакт:</b> <code>{html.escape(masked_contact)}</code> 🔒\n\n"
-                    f"📋 <b>ОПИСАНИЕ ЗАДАНИЯ (ТЗ):</b>\n"
+                    f"👤 <b>Заказчик:</b> <code>{html.escape(masked_contact)}</code> 🔒\n\n"
+                    f"📝 <b>Текст заявки:</b>\n"
                     f"<blockquote>{safe_text}</blockquote>"
                 )
 
