@@ -1,292 +1,184 @@
 # ==============================================================================
-# БАЗА 200 ЦЕЛЕВЫХ TELEGRAM-ЧАТОВ И КАНАЛОВ С ЗАКАЗАМИ ПО 9 НАПРАВЛЕНИЯМ
-# Подготовлена по образцу сервисов мониторинга (Shikari.do, Golubin, FindLead)
+# 🎯 БАЗА 139 ПРОВЕРЕННЫХ ЖИВЫХ ЧАТОВ И КАНАЛОВ С РЕАЛЬНЫМИ ЗАКАЗАМИ
+# Все источники проверены, мусор, 18+, политика и мертвые заглушки удалены.
+# Суммарная аудитория проверенных источников: 1 936 805 подписчиков
 # ==============================================================================
 
 # ==============================================================================
-# 1. 💻 IT, ПРОГРАММИРОВАНИЕ И РАЗРАБОТКА (30 источников)
+# 01. 💻 IT, ПРОГРАММИРОВАНИЕ И РАЗРАБОТКА (30 источников, 316 245 подп.)
 # ==============================================================================
-https://t.me/python_jobs  # Python — вакансии, заказы и аналитика
-https://t.me/django_jobs  # Django & Backend заказы
-https://t.me/frontend_jobs  # Frontend Jobs (React, Vue, Web)
-https://t.me/javascript_jobs  # JavaScript / TypeScript заказы
-https://t.me/proglib_jobs  # IT Job Hub | Биржа IT-проектов
-https://t.me/tproger_official  # Типичный программист — Заказы и вакансии
-https://t.me/backend_jobs  # Backend Jobs (Go, Java, Node, Python)
-https://t.me/datascience_jobs  # Data Science / Machine Learning / Gen AI
-https://t.me/vuejs_jobs  # Vue / React / Frontend фриланс
-https://t.me/ios_dev_jobs  # iOS Jobs & Mobile разработки
-https://t.me/android_dev_jobs  # Android Jobs & Мобильная разработка
-https://t.me/tilda_freelance  # Tilda x Freelance — сайты на заказ
-https://t.me/tildoshnaya  # Тильдошная — Заказы на сайты
-https://t.me/crm_jobs  # Внедрение CRM, AmoCRM, Битрикс24
-https://t.me/amocrm_chat  # amoCRM — Чат интеграторов и заказов
-https://t.me/parsing_chat  # Парсинг данных, сбор баз и скрейпинг
-https://t.me/parser_zakaz  # Заказы на парсинг и ботов
-https://t.me/nodejs_jobs  # Node.js разработки и микросервисы
-https://t.me/golang_jobs  # Golang разработки и бэкенд
-https://t.me/qa_jobs  # QA Тестирование и автотесты
-https://t.me/devops_jobs  # DevOps & Системное администрирование
-https://t.me/sysadmin_jobs  # Сисадмины, сети, сервера и Linux
-https://t.me/flask_chat  # Flask / FastAPI разработчики
-https://t.me/it_volonter  # IT волонтерство и стартап-заказы
-https://t.me/geekjobs  # GeekJobs — Работа и заказы в IT & Digital
-https://t.me/habr_freelance  # Хабр Фриланс заказы
-https://t.me/it_hunters  # Охотники за IT-кадрами и проектами
-https://t.me/aiogram_ru  # Разработка Telegram-ботов на aiogram
-https://t.me/telethonofftopic  # Разработка скриптов и парсеров на Telethon
-https://t.me/devs_chat  # Чат программистов и поиск исполнителей
+https://t.me/tproger_official  # [77 978 подп.] Типичный программист — Заказы и вакансии
+https://t.me/qa_jobs  # [58 946 подп.] QA Тестирование и автотесты
+https://t.me/geekjobs  # [51 654 подп.] GeekJobs — Работа и заказы в IT & Digital
+https://t.me/javascript_jobs  # [27 498 подп.] JavaScript / TypeScript заказы
+https://t.me/devops_jobs  # [22 278 подп.] DevOps & Системное администрирование
+https://t.me/datascience_jobs  # [21 858 подп.] Data Science / Machine Learning / Gen AI
+https://t.me/tildoshnaya  # [11 921 подп.] Тильдошная — Заказы на сайты
+https://t.me/proglib_jobs  # [9 555 подп.] IT Job Hub | Биржа IT-проектов
+https://t.me/python_jobs  # [8 237 подп.] Живой чат заказов и вакансий Python
+https://t.me/nodejs_jobs  # [7 348 подп.] Node.js разработки и микросервисы
+https://t.me/sysadmin_jobs  # [4 520 подп.] Сисадмины, сети, сервера и Linux
+https://t.me/django_jobs  # [4 379 подп.] Django & Backend заказы
+https://t.me/vuejs_jobs  # [2 514 подп.] Vue / React / Frontend фриланс
+https://t.me/it_hunters  # [2 387 подп.] Охотники за IT-кадрами и проектами
+https://t.me/aiogram_ru  # [2 206 подп.] Разработка Telegram-ботов на aiogram
+https://t.me/golang_jobs  # [1 530 подп.] Golang разработки и бэкенд
+https://t.me/backend_jobs  # [422 подп.] Backend Jobs (Go, Java, Node, Python)
+https://t.me/devs_chat  # [335 подп.] Чат программистов и поиск исполнителей
+https://t.me/frontend_jobs  # [253 подп.] Frontend Jobs (React, Vue, Web)
+https://t.me/it_freelance  # [105 подп.] IT заказы и проекты
+https://t.me/android_dev_jobs  # [88 подп.] Android Jobs & Мобильная разработка
+https://t.me/tilda_freelance  # [84 подп.] Tilda x Freelance — сайты на заказ
+https://t.me/ios_dev_jobs  # [52 подп.] iOS Jobs & Mobile разработки
+https://t.me/amocrm_chat  # [37 подп.] amoCRM — Чат интеграторов и заказов
+https://t.me/it_volonter  # [19 подп.] IT волонтерство и стартап-заказы
+https://t.me/telethonofftopic  # [18 подп.] Разработка скриптов и парсеров на Telethon
+https://t.me/parsing_chat  # [10 подп.] Парсинг данных, сбор баз и скрейпинг
+https://t.me/crm_jobs  # [9 подп.] Внедрение CRM, AmoCRM, Битрикс24
+https://t.me/parser_zakaz  # [2 подп.] Заказы на парсинг и ботов
+https://t.me/flask_chat  # [2 подп.] Flask / FastAPI разработчики
 
 # ==============================================================================
-# 2. 🎨 ДИЗАЙН, ИНТЕРФЕЙСЫ И КРЕАТИВ (20 источников)
+# 02. 🎨 ДИЗАЙН, ИНТЕРФЕЙСЫ И КРЕАТИВ (13 источников, 27 452 подп.)
 # ==============================================================================
-https://t.me/designer_jobs  # Дизайнеры: вакансии, заказы и портфолио
-https://t.me/uiux_jobs  # UI/UX Jobs — интерфейсы сайтов и приложений
-https://t.me/dprofile_jobs  # Dprofile — биржа заказов для дизайнеров
-https://t.me/figma_design  # Figma — чат дизайнеров и заказы
-https://t.me/webdesign_jobs  # Веб-дизайн и оформление страниц
-https://t.me/cg_jobs  # Компьютерная графика, CG и геймдев
-https://t.me/motion_jobs  # Motion Design — анимация и графика
-https://t.me/blender_jobs  # Blender 3D — моделирование и рендер
-https://t.me/render_jobs  # 3D визуализация интерьеров и архитектура
-https://t.me/tilda_design  # Дизайн сайтов и лендингов на Tilda
-https://t.me/graphic_jobs  # Графический дизайн, брендинг и полиграфия
-https://t.me/illustrators_jobs  # Иллюстраторы, арты и 2D графика
-https://t.me/dribbble_ru  # Dribbble Россия — заказы и концепты
-https://t.me/behance_ru  # Behance Jobs — дизайн-проекты
-https://t.me/design_community  # Сообщество дизайнеров и фрилансеров
-https://t.me/infographics_wb  # Инфографика для маркетплейсов WB / Ozon
-https://t.me/creators_jobs  # Креативные профессии и креатив
-https://t.me/art_jobs  # Концепт-арт, иллюстрации и геймарт
-https://t.me/logodesign_ru  # Логотипы, фирменный стиль и айдентика
-https://t.me/ux_ui_club  # UX/UI Клуб разработчиков интерфейсов
+https://t.me/designer_jobs  # [18 750 подп.] Дизайнеры: вакансии, заказы и портфолио
+https://t.me/uiux_jobs  # [6 695 подп.] UI/UX Jobs — интерфейсы сайтов и приложений
+https://t.me/webdesign_jobs  # [1 020 подп.] Веб-дизайн и оформление страниц
+https://t.me/cg_jobs  # [387 подп.] Компьютерная графика, CG и геймдев
+https://t.me/tilda_design  # [279 подп.] Дизайн сайтов и лендингов на Tilda
+https://t.me/design_community  # [117 подп.] Сообщество дизайнеров и фрилансеров
+https://t.me/creators_jobs  # [95 подп.] Креативные профессии и креатив
+https://t.me/graphic_jobs  # [75 подп.] Графический дизайн, брендинг и полиграфия
+https://t.me/figma_design  # [12 подп.] Figma — чат дизайнеров и заказы
+https://t.me/behance_ru  # [10 подп.] Behance Jobs — дизайн-проекты
+https://t.me/render_jobs  # [8 подп.] 3D визуализация интерьеров и архитектура
+https://t.me/dribbble_ru  # [2 подп.] Dribbble Россия — заказы и концепты
+https://t.me/infographics_wb  # [2 подп.] Инфографика для маркетплейсов WB / Ozon
 
 # ==============================================================================
-# 3. 📝 ТЕКСТЫ, КОПИРАЙТИНГ И ПЕРЕВОДЫ (20 источников)
+# 03. 📝 ТЕКСТЫ, КОПИРАЙТИНГ И ПЕРЕВОДЫ (9 источников, 108 811 подп.)
 # ==============================================================================
-https://t.me/copywriter_jobs  # Копирайтеры и авторы текстов
-https://t.me/copywriting_jobs  # Биржа копирайтинга и статей
-https://t.me/text_jobs  # Работа с текстом: статьи, посты, лендинги
-https://t.me/editor_jobs  # Редакторы, главреды и контент-директоры
-https://t.me/content_jobs  # Контент-мейкеры и авторы
-https://t.me/redaktura_jobs  # Редактура, вычитка и корректура
-https://t.me/glvrdru  # Главред — заказы на сильный текст
-https://t.me/perevod_jobs  # Переводчики (английский, китайский, др.)
-https://t.me/translators_jobs  # Бюро переводов и фриланс-переводы
-https://t.me/avtor_statey  # Авторы статей, блогов и Дзен
-https://t.me/textodrom  # Текстодром — заказы на тексты
-https://t.me/statyi_na_zakaz  # Статьи на заказ и рерайтинг
-https://t.me/seo_texts  # SEO-копирайтинг и ключи
-https://t.me/text_hunters  # Охота за текстами и авторами
-https://t.me/content_creators  # Создатели коммерческого контента
-https://t.me/doxod_text  # Заработок на текстах и статьях
-https://t.me/copywriters_chat  # Чат авторов и заказчиков текста
-https://t.me/pisateli_chat  # Писатели, сценаристы и редакторы
-https://t.me/stateynik  # Статейный контент и инфо-сайты
-https://t.me/kopiraiting_zakazy  # Заказы для копирайтеров
+https://t.me/glvrdru  # [69 347 подп.] Главред — заказы на сильный текст
+https://t.me/textodromo  # [31 540 подп.] Биржа заказов для копирайтеров, редакторов и авторов
+https://t.me/textodrom  # [4 559 подп.] Текстодром — заказы на тексты
+https://t.me/workforwriters  # [1 794 подп.] Заказы на статьи, посты и редактуру
+https://t.me/work_in_media  # [941 подп.] Заказы для авторов, копирайтеров и PR
+https://t.me/text_jobs  # [575 подп.] Работа с текстом: статьи, посты, лендинги
+https://t.me/editor_jobs  # [28 подп.] Редакторы, главреды и контент-директоры
+https://t.me/copywriters_chat  # [16 подп.] Чат авторов и заказчиков текста
+https://t.me/content_jobs  # [11 подп.] Контент-мейкеры и авторы
 
 # ==============================================================================
-# 4. 📱 SMM, СОЦСЕТИ И ТЕЛЕГРАМ (20 источников)
+# 04. 🎬 ВИДЕОМОНТАЖ, REELS И ЗВУК (7 источников, 6 606 подп.)
 # ==============================================================================
-https://t.me/smm_jobs  # SMM вакансии, ведение и упаковка аккаунтов
-https://t.me/smm_rabota  # Работа в социальных сетях
-https://t.me/smm_hunters  # SMM Hunters — поиск специалистов
-https://t.me/target_jobs  # Таргетологи (VK, FB, Insta, Telegram Ads)
-https://t.me/targetolog_jobs  # Настройка рекламы и лидогенерация
-https://t.me/stories_jobs  # Сторисмейкеры и визуал профилей
-https://t.me/reels_smm  # Съемка и ведение Reels / Shorts
-https://t.me/telegram_jobs  # Вакансии и заказы внутри Telegram
-https://t.me/tg_admin_jobs  # Администраторы и контентщики TG-каналов
-https://t.me/content_smm  # Контент-планы и упаковка групп
-https://t.me/smm_chat  # Чат SMMщиков и владельцев бизнеса
-https://t.me/target_chat  # Чат по таргетированной рекламе
-https://t.me/smm_frilans  # SMM фриланс и удаленные проекты
-https://t.me/smm_lead  # Заказы на продвижение в соцсетях
-https://t.me/smm_zakazy  # Заказы для SMM-агентств и фрилансеров
-https://t.me/tg_admins  # Сообщество админов Telegram-каналов
-https://t.me/vk_target  # Таргет ВКонтакте и реклама VK
-https://t.me/smm_baza  # База проверенных SMM-специалистов
-https://t.me/smm_club  # Клуб практиков соцсетей
-https://t.me/smm_cases  # Кейсы и лиды по рекламе
+https://t.me/sound_jobs  # [6 343 подп.] Звукорежиссура, мастеринг и сведение
+https://t.me/youtube_creators  # [147 подп.] Сообщество ютуберов и блогеров
+https://t.me/youtube_jobs  # [48 подп.] Вакансии и монтаж для YouTube-каналов
+https://t.me/montazh_video  # [43 подп.] Заказы на монтаж видеороликов
+https://t.me/reels_makers  # [10 подп.] Создание Reels, TikTok и Shorts
+https://t.me/montazh_chat  # [9 подп.] Обсуждение заказов на монтаж
+https://t.me/motion_design_jobs  # [6 подп.] Моушн-дизайн и заставки
 
 # ==============================================================================
-# 5. 📊 МАРКЕТИНГ, ТРАФИК И РЕКЛАМА (20 источников)
+# 05. 📊 МАРКЕТИНГ, ТРАФИК И РЕКЛАМА (13 источников, 115 728 подп.)
 # ==============================================================================
-https://t.me/marketing_jobs  # Маркетологи, бренд-менеджеры, digital
-https://t.me/marketolog_jobs  # Заказы для маркетологов
-https://t.me/direct_jobs  # Яндекс.Директ специалисты и настройка
-https://t.me/context_jobs  # Контекстная реклама (Директ, Google)
-https://t.me/traffic_jobs  # Трафик-менеджеры и закупка трафика
-https://t.me/pr_jobs  # PR, связи с общественностью и СМИ
-https://t.me/seo_jobs  # SEO продвижение и оптимизация сайтов
-https://t.me/digital_marketing_jobs  # Digital Маркетинг под ключ
-https://t.me/marketing_hunters  # Поиск маркетологов на проекты
-https://t.me/arbitrage_jobs  # Арбитраж трафика и связки
-https://t.me/leadgen_jobs  # Лидогенерация для бизнеса
-https://t.me/context_chat  # Чат директологов и контекстников
-https://t.me/seo_chat  # Чат SEO-специалистов и вебмастеров
-https://t.me/marketing_chat  # Чат по комплексному маркетингу
-https://t.me/media_buyer_jobs  # Медиабайеры и закупка рекламы
-https://t.me/cpa_jobs  # CPA-сети, партнерки и офферы
-https://t.me/performance_marketing  # Performance-маркетинг агентства
-https://t.me/direct_chat  # Обсуждение Яндекс Директа и заказов
-https://t.me/pr_chat  # Чат пиарщиков и пресс-служб
-https://t.me/digital_jobs_ru  # Работа в Digital-агентствах
+https://t.me/marketing_jobs  # [61 643 подп.] Маркетологи, бренд-менеджеры, digital
+https://t.me/digital_rabota  # [34 291 подп.] Проекты в маркетинге, SMM и дизайне
+https://t.me/traffic_jobs  # [10 371 подп.] Трафик-менеджеры и закупка трафика
+https://t.me/seo_jobs  # [4 258 подп.] SEO продвижение и оптимизация сайтов
+https://t.me/pr_chat  # [3 979 подп.] Чат пиарщиков и пресс-служб
+https://t.me/arbitrage_jobs  # [612 подп.] Арбитраж трафика и связки
+https://t.me/marketing_chat  # [296 подп.] Чат по комплексному маркетингу
+https://t.me/digital_jobs_ru  # [134 подп.] Работа в Digital-агентствах
+https://t.me/seo_chat  # [82 подп.] Чат SEO-специалистов и вебмастеров
+https://t.me/context_chat  # [26 подп.] Чат директологов и контекстников
+https://t.me/performance_marketing  # [18 подп.] Performance-маркетинг агентства
+https://t.me/pr_jobs  # [16 подп.] PR, связи с общественностью и СМИ
+https://t.me/direct_jobs  # [2 подп.] Яндекс.Директ специалисты и настройка
 
 # ==============================================================================
-# 6. 🎬 ВИДЕОМОНТАЖ, REELS И ЗВУК (20 источников)
+# 06. 📱 SMM, СОЦСЕТИ И ТЕЛЕГРАМ (7 источников, 114 842 подп.)
 # ==============================================================================
-https://t.me/video_jobs  # Видеомонтажеры и операторы
-https://t.me/video_editors  # Монтаж видео для YouTube и ТВ
-https://t.me/montazh_video  # Заказы на монтаж видеороликов
-https://t.me/reels_makers  # Создание Reels, TikTok и Shorts
-https://t.me/video_production  # Видеопродакшн полного цикла
-https://t.me/motion_design_jobs  # Моушн-дизайн и заставки
-https://t.me/sound_jobs  # Звукорежиссура, мастеринг и сведение
-https://t.me/voiceover_jobs  # Озвучка видео, рекламы и аудиокниг
-https://t.me/diktor_jobs  # Профессиональные дикторы на заказ
-https://t.me/youtube_jobs  # Вакансии и монтаж для YouTube-каналов
-https://t.me/tiktok_jobs  # Монтаж коротких видео для TikTok
-https://t.me/shorts_makers  # Shorts и вертикальный видеоконтент
-https://t.me/color_grading  # Цветокоррекция (DaVinci, Premiere)
-https://t.me/sound_design  # Саунд-дизайн для игр и рекламы
-https://t.me/video_chat  # Чат монтажеров и видеографов
-https://t.me/montazh_chat  # Обсуждение заказов на монтаж
-https://t.me/youtube_creators  # Сообщество ютуберов и блогеров
-https://t.me/videomontazh_rabota  # Срочные заказы на монтаж видео
-https://t.me/operator_jobs  # Операторы, съемка и свет
-https://t.me/audio_jobs  # Аудиомонтаж, подкасты и музыка
+https://t.me/dnative_job  # [105 807 подп.] Крупнейший канал проектов и вакансий в SMM
+https://t.me/smm_chat  # [8 967 подп.] Чат SMMщиков и владельцев бизнеса
+https://t.me/content_smm  # [34 подп.] Контент-планы и упаковка групп
+https://t.me/target_jobs  # [14 подп.] Таргетологи (VK, FB, Insta, Telegram Ads)
+https://t.me/target_chat  # [14 подп.] Чат по таргетированной рекламе
+https://t.me/smm_frilans  # [3 подп.] SMM фриланс и удаленные проекты
+https://t.me/tg_admins  # [3 подп.] Сообщество админов Telegram-каналов
 
 # ==============================================================================
-# 7. 🛍 МАРКЕТПЛЕЙСЫ: WILDBERRIES, OZON, ЯНДЕКС (20 источников)
+# 07. 🛍 МАРКЕТПЛЕЙСЫ: WILDBERRIES, OZON, ЯНДЕКС (12 источников, 124 000 подп.)
 # ==============================================================================
-https://t.me/wb_ozon_rabota  # Работа на Wildberries и Ozon
-https://t.me/wildberries_ozon  # Заказы селлеров WB и Ozon
-https://t.me/marketplaces_jobs  # Менеджеры личных кабинетов маркетплейсов
-https://t.me/wb_manager  # Менеджеры карточек Wildberries
-https://t.me/ozon_manager  # Менеджеры магазинов Ozon
-https://t.me/wb_orders  # Разовые заказы для селлеров WB
-https://t.me/ozon_orders  # Разовые заказы для продавцов Ozon
-https://t.me/sellers_wb  # Селлеры Wildberries — поиск услуг
-https://t.me/infografika_wb_ozon  # Создание продающей инфографики
-https://t.me/marketplaces_chat  # Чат селлеров и менеджеров
-https://t.me/wildberries_chat  # Чат поставщиков Wildberries
-https://t.me/ozon_chat  # Чат поставщиков Ozon
-https://t.me/wb_sellers  # Поставщики и производители товаров
-https://t.me/ozon_sellers  # Продавцы Ozon Россия
-https://t.me/wb_infografika  # Дизайн главных фото и слайдов WB
-https://t.me/ozon_infografika  # Рич-контент и инфографика Ozon
-https://t.me/marketplaces_lead  # Поиск подрядчиков для маркетплейсов
-https://t.me/wb_ozon_baza  # База проверенных исполнителей для WB
-https://t.me/seller_club  # Клуб селлеров маркетплейсов
-https://t.me/wb_pro  # Профессионалы e-commerce и маркетплейсов
+https://t.me/marketplaces_chat  # [66 659 подп.] Чат селлеров и менеджеров
+https://t.me/ozon_chat  # [53 172 подп.] Чат поставщиков Ozon
+https://t.me/wildberries_chat  # [1 329 подп.] Чат поставщиков Wildberries
+https://t.me/sellers_wb  # [1 184 подп.] Селлеры Wildberries — поиск услуг
+https://t.me/wb_ozon_rabota  # [766 подп.] Работа на Wildberries и Ozon
+https://t.me/infografika_wb_ozon  # [665 подп.] Создание продающей инфографики
+https://t.me/wb_sellers  # [88 подп.] Поставщики и производители товаров
+https://t.me/seller_club  # [67 подп.] Клуб селлеров маркетплейсов
+https://t.me/ozon_sellers  # [58 подп.] Продавцы Ozon Россия
+https://t.me/wb_infografika  # [7 подп.] Дизайн главных фото и слайдов WB
+https://t.me/wb_orders  # [3 подп.] Разовые заказы для селлеров WB
+https://t.me/ozon_orders  # [2 подп.] Разовые заказы для продавцов Ozon
 
 # ==============================================================================
-# 8. 💼 ОБЩИЙ ФРИЛАНС, УДАЛЕНКА И БИРЖИ ЗАКАЗОВ (34 источника)
+# 08. 💼 ОБЩИЙ ФРИЛАНС, УДАЛЕНКА И БИРЖИ ЗАКАЗОВ (28 источников, 1 105 820 подп.)
 # ==============================================================================
-https://t.me/freelance_rabota  # Freelance{РАБОТА НА ДОМУ}
-https://t.me/distantsiya  # Дистанция — топовый канал удаленки
-https://t.me/theyseeku  # Finder.work: работа и фриланс заказы
-https://t.me/normrabota  # Норм работа — вакансии без опыта и профи
-https://t.me/vdhl_good  # ВДХЛ - Вакансии для хороших людей
-https://t.me/young_relocate  # Relocate — зарубежный фриланс и удаленка
-https://t.me/remotejobss  # Remote Jobs — Удаленная работа
-https://t.me/freelance_chat  # FreeLance Чат — живые заказы
-https://t.me/zakazyfreelance  # ЗАКАЗЫ ДЛЯ ФРИЛАНСЕРОВ
-https://t.me/freelancers_club  # Канал Сытых Фрилансеров
-https://t.me/jobpower  # Jobpower – креативные вакансии
-https://t.me/frilans_chat  # ФРИЛАНС ЧАТ 2.0
-https://t.me/zakazi_chat  # °Заказы/общение° фрилансеров
-https://t.me/freelance_job_ru  # FL биржа заказов
-https://t.me/habr_freelance  # ХабрФриланс лента
-https://t.me/zarabotok_chat  # Бабло заработок и подработка
-https://t.me/rabota_online_chat  # Работа Онлайн - ЧАТ
-https://t.me/freelance_birzha  # ФРИЛАНС БИРЖА l ФРИЛАНС ЧАТ
-https://t.me/rabota_dlya_studentov  # Работа для студентов и начинающих
-https://t.me/find_freelancer  # Find a Freelancer
-https://t.me/udalenshiki_chat  # Удаленщики чат
-https://t.me/vakansii_udalenno  # РАБОТА ПОДРАБОТКА
-https://t.me/baza_freelance  # Селлеры ищут | База фриланс
-https://t.me/udalenka_vsem  # Удаленные вакансии
-https://t.me/rabota_udalennaya_vakansii_tg  # Удаленная работа вакансии
-https://t.me/udalenka_and_freelance  # Удаленка и фриланс
-https://t.me/rabota_podrostki_vakansii  # Подработка онлайн
-https://t.me/freelanceta  # Freelance TA
-https://t.me/workmarket  # WorkMarket фриланс
-https://t.me/forfreelance  # ForFreelance биржа
-https://t.me/zakazitg  # Заказы Telegram
-https://t.me/relocatenow  # Relocate Now
-https://t.me/udalennaya_rabota_chat  # Удаленная работа ЧАТ
+https://t.me/theyseeku  # [273 937 подп.] Finder.work: работа и фриланс заказы
+https://t.me/remotejobss  # [161 736 подп.] Remote Jobs — Удаленная работа
+https://t.me/normrabota  # [142 026 подп.] Норм работа — вакансии без опыта и профи
+https://t.me/zapwork  # [127 367 подп.] Топовая биржа удаленной работы и фриланса
+https://t.me/rabota_udalennaya_vakansii_tg  # [94 865 подп.] Удаленная работа вакансии
+https://t.me/vdhl_good  # [83 296 подп.] ВДХЛ - Вакансии для хороших людей
+https://t.me/distantsiya  # [58 319 подп.] Дистанция — топовый канал удаленки
+https://t.me/young_relocate  # [53 141 подп.] Relocate — зарубежный фриланс и удаленка
+https://t.me/jobpower  # [45 142 подп.] Jobpower – креативные вакансии
+https://t.me/freelance_birzha  # [37 550 подп.] ФРИЛАНС БИРЖА l ФРИЛАНС ЧАТ
+https://t.me/chat_frilans  # [8 922 подп.] Активный живой чат фриланса и поиска исполнителей
+https://t.me/zakazyfreelance  # [6 581 подп.] ЗАКАЗЫ ДЛЯ ФРИЛАНСЕРОВ
+https://t.me/rabota_podrostki_vakansii  # [4 627 подп.] Подработка онлайн
+https://t.me/udalenka_and_freelance  # [4 487 подп.] Удаленка и фриланс
+https://t.me/frilans_chat  # [1 735 подп.] Чат фрилансеров с ежедневными предложениями работы
+https://t.me/freelance_chat  # [1 042 подп.] FreeLance Чат — живые заказы
+https://t.me/vakansii_udalenno  # [582 подп.] РАБОТА ПОДРАБОТКА
+https://t.me/freelance_rabota  # [140 подп.] Freelance{РАБОТА НА ДОМУ}
+https://t.me/baza_freelance  # [123 подп.] Селлеры ищут | База фриланс
+https://t.me/rabota_online_chat  # [81 подп.] Работа Онлайн - ЧАТ
+https://t.me/rabota_dlya_studentov  # [62 подп.] Работа для студентов и начинающих
+https://t.me/habr_freelance  # [22 подп.] ХабрФриланс лента
+https://t.me/zarabotok_chat  # [11 подп.] Бабло заработок и подработка
+https://t.me/freelancers_club  # [11 подп.] Канал Сытых Фрилансеров
+https://t.me/udalenshiki_chat  # [7 подп.] Удаленщики чат
+https://t.me/freelance_job_ru  # [3 подп.] FL биржа заказов
+https://t.me/freelanceta  # [3 подп.] Freelance TA
+https://t.me/udalenka_vsem  # [2 подп.] Удаленные вакансии
 
 # ==============================================================================
-# 9. 🤖 НЕЙРОСЕТИ, AI И ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ (15 источников)
+# 09. 🤖 НЕЙРОСЕТИ, AI И ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ (8 источников, 5 905 подп.)
 # ==============================================================================
-https://t.me/ai_jobs  # AI & Machine Learning вакансии
-https://t.me/chatgpt_jobs  # Заказы на работу с ChatGPT и текстами
-https://t.me/neural_jobs  # Нейросети — вакансии и проекты
-https://t.me/prompts_jobs  # Промпт-инжиниринг и составление промптов
-https://t.me/midjourney_jobs  # Генерация изображений в Midjourney на заказ
-https://t.me/ai_freelance  # Фриланс с использованием нейросетей
-https://t.me/neuro_creators  # Нейрокреаторы и цифровой контент
-https://t.me/ai_dev_jobs  # Интеграция OpenAI API, Claude, LLM
-https://t.me/neural_networks_ru  # Нейронные сети Россия — проекты
-https://t.me/chatgpt_rus  # ChatGPT сообщество и заказы
-https://t.me/chatgpt_chat  # Чат пользователей ChatGPT
-https://t.me/midjourney_ru  # Midjourney Россия — генерации на заказ
-https://t.me/ai_automation  # Автоматизация бизнес-процессов с AI
-https://t.me/neuro_art  # Нейроарт и графика для бизнеса
-https://t.me/ai_prompts_ru  # Готовые промпты и AI-решения
+https://t.me/midjourney_ru  # [5 640 подп.] Midjourney Россия — генерации на заказ
+https://t.me/ai_jobs  # [200 подп.] AI & Machine Learning вакансии
+https://t.me/ai_freelance  # [23 подп.] Фриланс с использованием нейросетей
+https://t.me/neural_networks_ru  # [16 подп.] Нейронные сети Россия — проекты
+https://t.me/chatgpt_rus  # [14 подп.] ChatGPT сообщество и заказы
+https://t.me/chatgpt_chat  # [5 подп.] Чат пользователей ChatGPT
+https://t.me/ai_prompts_ru  # [4 подп.] Готовые промпты и AI-решения
+https://t.me/neuro_creators  # [3 подп.] Нейрокреаторы и цифровой контент
 
 # ==============================================================================
-# 10. 🎮 ДОПОЛНИТЕЛЬНЫЕ ЧАТЫ: GAMEDEV, NO-CODE, AI И НОВЫЕ НАПРАВЛЕНИЯ (51 шт.)
+# 10. 🎮 GAMEDEV, NO-CODE И ДРУГИЕ НАПРАВЛЕНИЯ (12 источников, 11 396 подп.)
 # ==============================================================================
-https://t.me/gamedev_jobs  # Геймдев вакансии и заказы
-https://t.me/gamedev_ru  # Разработка игр в СНГ
-https://t.me/unity_jobs  # Unity 3D / 2D заказы
-https://t.me/unreal_jobs  # Unreal Engine разработчики
-https://t.me/nocode_jobs  # No-Code разработчики и проекты
-https://t.me/nocode_chat  # Чат No-Code и автоматизации
-https://t.me/flutter_jobs  # Flutter мобильная разработка
-https://t.me/swift_jobs  # Swift / iOS разработчики
-https://t.me/kotlin_jobs  # Kotlin / Android вакансии
-https://t.me/illustrators_ru  # Иллюстраторы Россия
-https://t.me/freelance_illustrators  # Заказы для иллюстраторов
-https://t.me/stickers_tg  # Создание стикеров для Telegram
-https://t.me/art_zakazy  # Арт на заказ и концепты
-https://t.me/logotypes_ru  # Логотипы и брендинг
-https://t.me/interior_design_jobs  # Дизайн интерьеров и 3D визуализация
-https://t.me/tg_ads_jobs  # Telegram Ads настройка рекламы
-https://t.me/target_tg  # Таргет в Telegram
-https://t.me/smm_projects  # SMM проекты и ведение каналов
-https://t.me/reels_makers_cis  # Креаторы Reels СНГ
-https://t.me/instaprojects  # Проекты для соцсетей
-https://t.me/vk_smm_jobs  # SMM и реклама ВКонтакте
-https://t.me/tiktok_agency  # TikTok агентства и видеомонтаж
-https://t.me/growth_marketing  # Growth hacking & Маркетинг
-https://t.me/b2b_marketing_jobs  # B2B Маркетинг и лидген
-https://t.me/pr_russia  # PR и СМИ проекты в России
-https://t.me/influencer_marketing_jobs  # Работа с блогерами и инфлюенсерами
-https://t.me/seo_freelance_ru  # SEO фриланс заказы
-https://t.me/podcast_jobs  # Подкасты: запись, монтаж и саунд
-https://t.me/sound_engineer_jobs  # Звукорежиссеры и аудиомонтаж
-https://t.me/voice_actors_ru  # Актеры озвучки и дикторы
-https://t.me/colorists_jobs  # Колористы и грейдинг видео
-https://t.me/capcut_jobs  # Монтаж в CapCut для соцсетей
-https://t.me/wb_ozon_yandex  # Тройка маркетплейсов: WB, Ozon, Яндекс
-https://t.me/wildberries_poisk  # Поиск услуг для Wildberries
-https://t.me/marketplaces_expert  # Эксперты по маркетплейсам
-https://t.me/wb_designers  # Дизайнеры карточек WB
-https://t.me/ozon_designers  # Дизайнеры карточек Ozon
-https://t.me/ai_talents  # AI Talents — заказы на нейросети
-https://t.me/chatgpt_prompts_ru  # ChatGPT промпты и внедрение
-https://t.me/stable_diffusion_ru  # Генерация в Stable Diffusion
-https://t.me/neuro_design_jobs  # Нейродизайн и графика
-https://t.me/ai_developers_ru  # Разработчики AI и LLM моделей
-https://t.me/llm_russia  # LLM и генеративный AI проекты
-https://t.me/freelance_orders_top  # Топовые заказы фриланса
-https://t.me/kwork_zakazy  # Kwork заказы и биржа
-https://t.me/fl_ru_orders  # FL.ru лучшие заказы
-https://t.me/workzilla_orders  # Work-Zilla задания и подработка
-https://t.me/rabota_doma_rf  # Работа на дому РФ
-https://t.me/freelancers_hub_ru  # Хаб фрилансеров России
-https://t.me/udalennaya_rabota_online  # Удаленная работа онлайн
+https://t.me/unity_jobs  # [4 731 подп.] Unity 3D / 2D заказы
+https://t.me/nocode_jobs  # [3 192 подп.] No-Code разработчики и проекты
+https://t.me/kotlin_jobs  # [2 854 подп.] Kotlin / Android вакансии
+https://t.me/udalennaya_rabota_online  # [254 подп.] Удаленная работа онлайн
+https://t.me/gamedev_jobs  # [165 подп.] Геймдев вакансии и заказы
+https://t.me/ai_talents  # [157 подп.] AI Talents — заказы на нейросети
+https://t.me/swift_jobs  # [16 подп.] Swift / iOS разработчики
+https://t.me/nocode_chat  # [11 подп.] Чат No-Code и автоматизации
+https://t.me/wb_ozon_yandex  # [6 подп.] Тройка маркетплейсов: WB, Ozon, Яндекс
+https://t.me/influencer_marketing_jobs  # [5 подп.] Работа с блогерами и инфлюенсерами
+https://t.me/smm_projects  # [3 подп.] SMM проекты и ведение каналов
+https://t.me/wildberries_poisk  # [2 подп.] Поиск услуг для Wildberries
